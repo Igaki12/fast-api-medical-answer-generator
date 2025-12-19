@@ -4,8 +4,8 @@ import logging
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import BackgroundTasks, Depends, FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import BackgroundTasks, Depends, FastAPI, File, HTTPException, UploadFile # pyright: ignore[reportMissingImports]
+from fastapi.responses import FileResponse, JSONResponse # pyright: ignore[reportMissingImports]
 
 from app.auth import require_basic_auth
 from app.models import DownloadStatusResponse, GenerateResponse
