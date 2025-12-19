@@ -1,0 +1,6 @@
+{
+  "job_id": "1954899f-2bbb-40f9-b04c-cfaafa1ff7ec",
+  "status": "failed",
+  "message": "GEMINI_API_KEY is not set. Run secret_export_gemini_api_key.sh first.",
+  "updated_at": "2025-12-19T06:48:27.482254+00:00"
+}
