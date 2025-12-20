@@ -256,3 +256,92 @@ uvicorn main:app --reload
 
 4. **ローカル動作テスト**
 * Swagger UI (`/docs`) または `curl` を用いた画像アップロード・生成テスト。
+
+---
+
+## 9. legacy_scripts 参照ドキュメント
+
+* **`AGENTS_for_legacy_scripts.md`** に、既存の手動/半手動パイプラインの全体像、入出力、出力ディレクトリ構成、環境変数の扱いが整理されています。legacy_scripts を FastAPI に移植する際の要件定義・互換確認の基準として参照すること。
+* このリポジトリの `legacy_scripts/` は現状の実装は以下を最新版として扱う:
+  * `legacy_scripts/oneshot_pipeline-v1.5.sh`
+  * `legacy_scripts/generate_answer_md-v2.2.py`
+  * `legacy_scripts/add_metadata-v3.4.py`
+  * `legacy_scripts/convert_md_to_pdfs-v3.6.py`
+  * `legacy_scripts/check_missing_pdfs-v1.6.sh`
+  * `legacy_scripts/secret_export_gemini_api_key-v1.4.sh`
+
+---
+
+## 10. legacy_scripts を FastAPI に移植する際のAPI仕様（案）
+
+### A. 目的と互換方針
+* 既存の `oneshot_pipeline` を **API 1回呼び出しで同等の成果物**（Markdown、PDF）に変換できること。 
+* **メタデータ生成とDOCX生成については実装しない。** 
+* 既存スクリプトの処理順と出力ディレクトリ構造を維持し、差分検証が容易な形で移植する。
+* APIキーは `multipart/form-data` の `api_key` を優先し、未指定時のみ `GEMINI_API_KEY` を参照する。
+
+### B. 推奨エンドポイント（Pipeline型）
+1. **解説生成パイプライン開始**
+   * **URL**: `POST /api/v1/legacy/pipeline`
+   * **Content-Type**: `multipart/form-data`
+   * **Parameters (Form Data)**:
+     * `api_key` (String, optional) - Gemini API Key（未指定時は環境変数フォールバック）
+     * `input_file` (File, required) - PDF/JPEG/PNG 20MBまで
+     * `explanation_name` (String, required) - 生成する解説の名称
+     * `university` (String, required) - 大学名 (例: 東京大学)
+     * `year` (String, required) - 年度 (例: 2024)
+     * `subject` (String, required) - 科目名 (例: 生化学)
+     * `author` (String, required) - 作成者名 (例: 佐藤先生)
+   * **Response**: `202 Accepted`
+   ```json
+   {
+     "status": "accepted",
+     "job_id": "legacy-20251210-001234",
+     "message": "legacy_scriptsパイプラインを開始しました。完了後にダウンロードしてください。"
+   }
+   ```
+
+2. **処理状況確認**
+   * **URL**: `GET /api/v1/legacy/pipeline/{job_id}`
+   * **Response**:
+     * `200 OK`（完了）
+     * `202 Accepted`（処理中）
+     * `404/410`（不在/期限切れ）
+
+3. **成果物ダウンロード**
+   * **URL**: `GET /api/v1/legacy/pipeline/{job_id}/download`
+   * **Response**:
+     * `200 OK` + ZIP（`markdown/`, `pdf/`, `status.json`）
+
+### C. 推奨エンドポイント（ステップ単体・デバッグ用、必要なら）
+* `POST /api/v1/legacy/generate_markdown`  
+  入力ファイル → Markdown を生成。`generate_answer_md-v2.2.py` 相当。
+* `POST /api/v1/legacy/convert_markdown`  
+  Markdown → PDF。`convert_md_to_pdfs-v3.6.py` 相当（DOCX/脚注付きMarkdownは無効）。
+
+### D. 入力変換ポリシー
+* 画像入力（JPEG/PNG）は **PDF化して Gemini に送信** する。
+* 生成物は `data/outputs/{job_id}/` 配下に、legacy_scriptsと同一の構造で保存する。
+* メタデータYAMLとDOCXの生成は行わない。
+
+---
+
+## 11. legacy_scripts 移植の実装計画（FastAPI）
+
+1. **既存スクリプトの関数化**
+* `generate_answer_md-v2.2.py` を `app/services/legacy/generate_markdown.py` に移植（Gemini呼び出しとPDF化）。
+* `convert_md_to_pdfs-v3.6.py` を `app/services/legacy/convert_markdown.py` に移植（pandoc/LuaLaTeX変換、DOCX生成は移植しない）。
+
+2. **ファイル配置と成果物レイアウト**
+* 入力: `data/inputs/{job_id}/` に保存。
+* 出力: `data/outputs/{job_id}/markdown`, `pdf`。
+* **markdown_with_attrib/** はAPI出力に含めない。
+* `status.json` に段階状態（queued/generating_md/converting/done/failed）を保存。
+
+3. **APIエンドポイント実装**
+* `POST /api/v1/legacy/pipeline` を BackgroundTasks で実行し、1リクエスト=1ジョブの非同期処理に統一。
+* 必要に応じてステップ単体エンドポイントを追加（デバッグ/再処理用途）。
+
+4. **互換性検証**
+* legacy_scriptsの単体出力とAPI出力を同一入力で比較（Markdown/PDF）。
+* 画像入力の変換結果を重点確認。
