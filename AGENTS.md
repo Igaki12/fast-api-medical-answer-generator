@@ -169,7 +169,7 @@ project-root/
 | フィールド名 | 型 | 必須 | 説明 |
 | --- | --- | --- | --- |
 | `api_key` | String | YES | Gemini API Key (クライアント提供) |
-| `explanation_name` | String | YES | 生成する解説のタイトル (例: 2025年度 東大物理) |
+| `explanation_name` | String | YES | 生成する解説のタイトル (例: 2025年度_東京大学生化学_解答解説) |
 | `year` | String | YES | 年度 (例: 2024) |
 | `university` | String | YES | 大学名 (例: 東京大学) |
 | `subject` | String | YES | 科目名 (例: 生化学) |
