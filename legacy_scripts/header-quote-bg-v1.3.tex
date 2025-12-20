@@ -1,0 +1,19 @@
+% header-quote-bg.tex
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\let\oldquote\quote
+\let\endoldquote\endquote
+
+% 背景色だけ（枠なし）で引用を目立たせる
+\definecolor{quoteBG}{HTML}{F2F7FF} % 青みの淡色。茶系なら D7CCC8 などに変更
+
+\renewenvironment{quote}{\quotation}
+  {\endquotation}
+\renewenvironment{quotation}
+  {\begin{tcolorbox}[enhanced,breakable,boxrule=0pt,frame hidden,arc=0pt,outer arc=0pt,
+                     colback=quoteBG,left=12pt,right=12pt,top=18pt,bottom=12pt]}
+  {\end{tcolorbox}}
+
+% ChangeLog
+% 2025-10-23 v1.0 初版作成　v1.1, v1.2の変更は削除
+% 2025-10-23 v1.3 quote環境をquotation環境に変更。quotation側でtcolorboxを使うように修正
