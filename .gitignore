@@ -1,0 +1,32 @@
+schedule.md
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+minimum-venv/
+.venv/
+venv/
+env/
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.*
+*.env
+
+# Data outputs / inputs
+data/
+*.zip

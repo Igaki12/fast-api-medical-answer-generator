@@ -224,7 +224,7 @@ project-root/
 
 ---
 
-## 7. 今後のVPS移行に向けた留意点
+## 4. 今後のVPS移行に向けた留意点
 
 * XServer VPS 等へのデプロイを想定
 * ローカル起動コマンド:
@@ -238,7 +238,7 @@ uvicorn main:app --reload
 
 ---
 
-## 8. 次のステップ
+## 5. 次のステップ
 
 以下の順序で実装を進めることを推奨します：
 
@@ -259,7 +259,7 @@ uvicorn main:app --reload
 
 ---
 
-## 9. legacy_scripts 参照ドキュメント
+## 6. legacy_scripts 参照ドキュメント
 
 * **`AGENTS_for_legacy_scripts.md`** に、既存の手動/半手動パイプラインの全体像、入出力、出力ディレクトリ構成、環境変数の扱いが整理されています。legacy_scripts を FastAPI に移植する際の要件定義・互換確認の基準として参照すること。
 * このリポジトリの `legacy_scripts/` は現状の実装は以下を最新版として扱う:
@@ -272,7 +272,7 @@ uvicorn main:app --reload
 
 ---
 
-## 10. legacy_scripts を FastAPI に移植する際のAPI仕様（案）
+## 7. legacy_scripts を FastAPI に移植する際のAPI仕様
 
 ### A. 目的と互換方針
 * 既存の `oneshot_pipeline` を **API 1回呼び出しで同等の成果物**（Markdown、PDF）に変換できること。 
@@ -326,7 +326,7 @@ uvicorn main:app --reload
 
 ---
 
-## 11. legacy_scripts 移植の実装計画（FastAPI）
+## 8. legacy_scripts 移植の実装計画（FastAPI）
 
 1. **既存スクリプトの関数化**
 * `generate_answer_md-v2.2.py` を `app/services/legacy/generate_markdown.py` に移植（Gemini呼び出しとPDF化）。

@@ -65,3 +65,24 @@ def find_zip(job_id: str) -> Optional[Path]:
     if zip_path.exists():
         return zip_path
     return None
+
+
+def create_legacy_zip(job_id: str) -> Path:
+    import zipfile
+
+    output_dir = ensure_job_output_dir(job_id)
+    zip_path = output_dir / f"{job_id}.zip"
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        status_path = output_dir / "status.json"
+        if status_path.exists():
+            archive.write(status_path, arcname="status.json")
+
+        for folder in ("markdown", "pdf"):
+            folder_path = output_dir / folder
+            if not folder_path.exists():
+                continue
+            for path in folder_path.rglob("*"):
+                if path.is_file():
+                    arcname = f"{folder}/{path.relative_to(folder_path)}"
+                    archive.write(path, arcname=arcname)
+    return zip_path
