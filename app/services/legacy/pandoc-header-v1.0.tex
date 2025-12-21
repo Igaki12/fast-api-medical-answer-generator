@@ -1,0 +1,77 @@
+\usepackage[match,haranoaji]{luatexja-preset} % 日本語（HaranoAji）を一括設定
+\usepackage{unicode-math}
+\setmathfont{TeX Gyre Termes Math}
+\usepackage[margin=25mm]{geometry}
+\usepackage{hyperref}
+
+\usepackage{emoji}                 % 絵文字
+\setemojifont{Apple Color Emoji}   % macOS のカラーフォントを明示（任意）
+\usepackage{newunicodechar}
+\newunicodechar{😀}{\emoji{grinning-face}} % ← ここがポイント（1f600ではなく名前）
+\newunicodechar{⁰}{\textsuperscript{0}}
+\newunicodechar{¹}{\textsuperscript{1}}
+\newunicodechar{²}{\textsuperscript{2}}
+\newunicodechar{³}{\textsuperscript{3}}
+\newunicodechar{⁴}{\textsuperscript{4}}
+\newunicodechar{⁵}{\textsuperscript{5}}
+\newunicodechar{⁶}{\textsuperscript{6}}
+\newunicodechar{⁷}{\textsuperscript{7}}
+\newunicodechar{⁸}{\textsuperscript{8}}
+\newunicodechar{⁹}{\textsuperscript{9}}
+\newunicodechar{⁺}{\textsuperscript{+}}
+\newunicodechar{⁻}{\textsuperscript{-}}
+\newunicodechar{⁼}{\textsuperscript{=}}
+\newunicodechar{⁽}{\textsuperscript{(}}
+\newunicodechar{⁾}{\textsuperscript{)}}
+\newunicodechar{ⁿ}{\textsuperscript{n}}
+\newunicodechar{ⁱ}{\textsuperscript{i}}
+
+% --- subscripts (U+2080–U+2089, ほか) ---
+\newunicodechar{₀}{\textsubscript{0}}
+\newunicodechar{₁}{\textsubscript{1}}
+\newunicodechar{₂}{\textsubscript{2}}
+\newunicodechar{₃}{\textsubscript{3}}
+\newunicodechar{₄}{\textsubscript{4}}
+\newunicodechar{₅}{\textsubscript{5}}
+\newunicodechar{₆}{\textsubscript{6}}
+\newunicodechar{₇}{\textsubscript{7}}
+\newunicodechar{₈}{\textsubscript{8}}
+\newunicodechar{₉}{\textsubscript{9}}
+\newunicodechar{₊}{\textsubscript{+}}
+\newunicodechar{₋}{\textsubscript{-}}
+\newunicodechar{₌}{\textsubscript{=}}
+\newunicodechar{₍}{\textsubscript{(}}
+\newunicodechar{₎}{\textsubscript{)}}
+% よく使う下付きラテン文字
+\newunicodechar{ₐ}{\textsubscript{a}}
+\newunicodechar{ₑ}{\textsubscript{e}}
+\newunicodechar{ₒ}{\textsubscript{o}}
+\newunicodechar{ₓ}{\textsubscript{x}}
+\newunicodechar{ₕ}{\textsubscript{h}}
+\newunicodechar{ₖ}{\textsubscript{k}}
+\newunicodechar{ₗ}{\textsubscript{l}}
+\newunicodechar{ₘ}{\textsubscript{m}}
+\newunicodechar{ₙ}{\textsubscript{n}}
+\newunicodechar{ₚ}{\textsubscript{p}}
+\newunicodechar{ₛ}{\textsubscript{s}}
+\newunicodechar{ₜ}{\textsubscript{t}}
+
+% header-quote-bg.tex
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\let\oldquote\quote
+\let\endoldquote\endquote
+
+% 背景色だけ（枠なし）で引用を目立たせる
+\definecolor{quoteBG}{HTML}{F2F7FF} % 青みの淡色。茶系なら D7CCC8 などに変更
+
+\renewenvironment{quote}{\quotation}
+  {\endquotation}
+\renewenvironment{quotation}
+  {\begin{tcolorbox}[enhanced,breakable,boxrule=0pt,frame hidden,arc=0pt,outer arc=0pt,
+                     colback=quoteBG,left=12pt,right=12pt,top=18pt,bottom=12pt]}
+  {\end{tcolorbox}}
+
+% ChangeLog
+% 2025-10-23 v1.0 初版作成　v1.1, v1.2の変更は削除
+% 2025-10-23 v1.3 quote環境をquotation環境に変更。quotation側でtcolorboxを使うように修正

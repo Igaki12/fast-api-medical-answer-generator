@@ -3,8 +3,8 @@ from __future__ import annotations
 import os
 import secrets
 
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi import Depends, HTTPException, status # type: ignore
+from fastapi.security import HTTPBasic, HTTPBasicCredentials # type: ignore
 
 
 _security = HTTPBasic()

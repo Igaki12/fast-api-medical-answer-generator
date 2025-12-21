@@ -33,7 +33,7 @@ def run_pipeline(
     )
 
     file_manager.write_status(job_id, "converting")
-    attribution_text = _build_attribution_text(university, year, subject)
+    attribution_text = _build_attribution_text(university, year, subject, author)
     convert_markdown.convert_markdown_to_pdf(
         md_path=md_path,
         output_dir=output_dir,
@@ -44,10 +44,11 @@ def run_pipeline(
     return file_manager.create_legacy_zip(job_id)
 
 
-def _build_attribution_text(university: str, year: str, subject: str) -> str:
+def _build_attribution_text(university: str, year: str, subject: str, author: str) -> str:
     parts = [
         (university or "").strip() or "不明",
         (year or "").strip() or "不明",
         (subject or "").strip() or "不明",
+        (author or "").strip() or "不明",
     ]
     return " ".join(parts)

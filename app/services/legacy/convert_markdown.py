@@ -31,15 +31,12 @@ SPECIAL_REPLACEMENTS_V36 = {
 }
 ASTRAL_RE = re.compile(r"[\U00010000-\U0010FFFF]")
 
-ROOT_DIR = Path(__file__).resolve().parents[3]
-LEGACY_DIR = ROOT_DIR / "legacy_scripts"
-HEADER_LUA = LEGACY_DIR / "header-lua-v1.0.tex"
-HEADER_QUOTE_BG = LEGACY_DIR / "header-quote-bg-v1.3.tex"
+HEADER_PANDOC = Path(__file__).resolve().parent / "pandoc-header-v1.0.tex"
 
 
 def convert_markdown_to_pdf(md_path: Path, output_dir: Path, attribution_text: str) -> Path:
-    if not HEADER_LUA.exists() or not HEADER_QUOTE_BG.exists():
-        raise RuntimeError("Pandoc header files are missing in legacy_scripts.")
+    if not HEADER_PANDOC.exists():
+        raise RuntimeError("Pandoc header file is missing in app/services/legacy.")
 
     md_text = md_path.read_text(encoding="utf-8")
     md_text = _inject_attribution(md_text, attribution_text)
@@ -70,9 +67,7 @@ def convert_markdown_to_pdf(md_path: Path, output_dir: Path, attribution_text: s
             "-V",
             "documentclass=ltjsarticle",
             "--include-in-header",
-            str(HEADER_LUA),
-            "--include-in-header",
-            str(HEADER_QUOTE_BG),
+            str(HEADER_PANDOC),
         ],
         check=True,
         env=pandoc_env,

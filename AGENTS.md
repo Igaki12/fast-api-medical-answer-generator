@@ -110,7 +110,12 @@ project-root/
 │   ├── models.py            # Pydanticモデル / APIスキーマ定義
 │   └── services/
 │       ├── generator.py     # Gemini呼び出し・解説生成処理
-│       └── file_manager.py  # アップロード/成果物管理
+│       ├── file_manager.py  # アップロード/成果物管理
+│       └── legacy/
+│           ├── convert_markdown.py   # pandoc/LuaLaTeX変換
+│           ├── generate_markdown.py  # Gemini呼び出し・Markdown生成
+│           ├── pipeline.py           # legacyパイプライン統合
+│           └── pandoc-header-v1.0.tex # 統合済みPandocヘッダー
 │
 ├── references/
 │   └── (md_files)
@@ -337,6 +342,8 @@ uvicorn main:app --reload
 * 出力: `data/outputs/{job_id}/markdown`, `pdf`。
 * **markdown_with_attrib/** はAPI出力に含めない。
 * `status.json` に段階状態（queued/generating_md/converting/done/failed）を保存。
+* Pandocヘッダーは `app/services/legacy/pandoc-header-v1.0.tex` に統合し、`legacy_scripts/` に依存しない。
+* 引用ブロックの脚注文は `大学名 + 年度 + 科目 + 著者` を含める。
 
 3. **APIエンドポイント実装**
 * `POST /api/v1/legacy/pipeline` を BackgroundTasks で実行し、1リクエスト=1ジョブの非同期処理に統一。

@@ -6,8 +6,8 @@ import subprocess
 import time
 from pathlib import Path
 
-from google import genai
-from google.genai import types
+from google import genai # type: ignore
+from google.genai import types # type: ignore
 
 
 HTTP_TIMEOUT_MS = 15 * 60 * 1000
@@ -140,8 +140,8 @@ def _build_prompt(
         f"「{title}の解答解説」から出力し始めてください。問題ごとに問題番号と問題文を省略せずそのまま引用し、引用であることをはっきりさせるためにquoteをつけてください。"
         "ただし問題文に図が含まれる場合、図の部分は引用しなくて構いません。解説は医学生向けに、冗長を最大限許容して丁寧に網羅的に作成してください。"
         "問題文が英語の場合は、解説に問題文の日本語訳についても出力してください。\n\n"
-        f"{metadata}\n\n"
-        f"入力ファイル: {filename}"
+        # f"{metadata}\n\n"
+        # f"入力ファイル: {filename}"
     )
 
 
