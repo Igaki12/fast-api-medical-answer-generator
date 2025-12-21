@@ -134,14 +134,11 @@ def _build_prompt(
     author: str,
 ) -> str:
     title = explanation_name.strip() or filename
-    metadata = f"大学名: {university}\n年度: {year}\n科目: {subject}\n作成者: {author}"
     return (
         "添付ファイルは医科大学の過去問問題ファイルです。以下の条件を満たすように、すべての問題に対する解答と解説をMarkdown形式で作成してください。"
         f"「{title}の解答解説」から出力し始めてください。問題ごとに問題番号と問題文を省略せずそのまま引用し、引用であることをはっきりさせるためにquoteをつけてください。"
         "ただし問題文に図が含まれる場合、図の部分は引用しなくて構いません。解説は医学生向けに、冗長を最大限許容して丁寧に網羅的に作成してください。"
         "問題文が英語の場合は、解説に問題文の日本語訳についても出力してください。\n\n"
-        # f"{metadata}\n\n"
-        # f"入力ファイル: {filename}"
     )
 
 
@@ -195,6 +192,6 @@ def _normalize_base_name(explanation_name: str, pdf_path: Path) -> str:
     base = explanation_name.strip() or pdf_path.stem
     base = base.replace("/", "_").replace("\\", "_")
     base = Path(base).stem
-    if "_解答解説" not in base:
+    if "解答" not in base:
         base = f"{base}_解答解説"
     return base
