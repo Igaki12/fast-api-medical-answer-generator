@@ -33,7 +33,7 @@
 
 
 * **文書変換**:
-* Markdown → DOCX / PDF 変換は **pandoc** を使用
+* Markdown → PDF 変換は **pandoc** を使用
 * Python 側では pandoc を subprocess 経由で呼び出す
 
 
@@ -109,7 +109,6 @@ project-root/
 │   ├── auth.py              # Basic認証ロジック
 │   ├── models.py            # Pydanticモデル / APIスキーマ定義
 │   └── services/
-│       ├── generator.py     # Gemini呼び出し・解説生成処理
 │       ├── file_manager.py  # アップロード/成果物管理
 │       └── legacy/
 │           ├── convert_markdown.py   # pandoc/LuaLaTeX変換
@@ -136,7 +135,7 @@ project-root/
 
 * **入力**: PDF, JPEG, PNG ファイルをサポート（Wordは変換コスト回避のためステップ2では非対応）。
 * **中間処理**: 解説本文は Markdown として生成する。
-* **出力**: 最終成果物（DOCX / PDF）は pandoc により生成する。
+* **出力**: 最終成果物（PDF）は pandoc により生成する。
 * **AIモデル**: Gemini 3 Pro のマルチモーダル機能 (`inlineData`等) を使用して、画像を直接APIへ渡す。
 
 ### B. API設計方針（FastAPI）
@@ -163,17 +162,25 @@ project-root/
 * **認証**: Basic Auth
 * **プロトコル**: HTTPS (本番/VPS環境)
 
+### ジョブ状態（status）一覧
+
+* `queued`: 受付済み（バックグラウンド開始待ち）
+* `generating_md`: Markdown 生成中
+* `done`: Markdown 生成完了
+* `failed`: 生成失敗
+* `failed_to_convert`: ダウンロード時のPDF変換に失敗
+
 ### 1. 解説生成リクエスト (POST)
 
-* **URL**: `POST /api/v1/generate_explanation`
+* **URL**: `POST /api/v1/pipeline`
 * **Content-Type**: `multipart/form-data`
-* **概要**: 過去問ファイルをアップロードし、生成ジョブを開始する。
+* **概要**: 過去問ファイルをアップロードし、Markdown生成ジョブを開始する。
 
 **Parameters (Form Data):**
 
 | フィールド名 | 型 | 必須 | 説明 |
 | --- | --- | --- | --- |
-| `api_key` | String | YES | Gemini API Key (クライアント提供) |
+| `api_key` | String | NO | Gemini API Key (未指定時は環境変数フォールバック) |
 | `explanation_name` | String | YES | 生成する解説のタイトル (例: 2025年度_東京大学生化学_解答解説) |
 | `year` | String | YES | 年度 (例: 2024) |
 | `university` | String | YES | 大学名 (例: 東京大学) |
@@ -196,15 +203,16 @@ project-root/
 
 ### 2. 解説ダウンロード (GET)
 
-* **URL**: `GET /api/v1/download_explanation/{job_id}`
-* **概要**: ジョブIDに基づいて生成状況を確認または成果物をダウンロードする。
+* **URL**: `GET /api/v1/pipeline/{job_id}/download`
+* **概要**: ジョブIDに基づいて生成状況を確認または成果物をダウンロードする。  
+  ダウンロード時に Markdown から PDF を生成し、ZIP に同梱する。
 
 **Responseパターン:**
 
 1. **処理完了 (Status 200)**
 * **Status**: `200 OK`
 * **Header**: `Content-Disposition: attachment; filename="result.zip"`
-* **Body**: ZIPファイル（PDF, DOCX, Markdown等を含む）
+* **Body**: ZIPファイル（`markdown/`, `pdf/`, `status.json`, `metadata.json`）
 
 
 2. **処理中 (Status 202)**
@@ -224,6 +232,7 @@ project-root/
 
 3. **エラー/不在 (Status 404/410)**
 * **Status**: `404 Not Found` (ID不一致) または `410 Gone` (有効期限切れ)
+* **PDF変換失敗**: `status.json` の `status` が `failed_to_convert` に更新され、ZIPは `markdown/` と `metadata.json` のみを含む
 
 
 
@@ -245,22 +254,7 @@ uvicorn main:app --reload
 
 ## 5. 次のステップ
 
-以下の順序で実装を進めることを推奨します：
-
-1. **Pydanticモデル定義 (`app/models.py`)**
-* `multipart/form-data` を受け取るためのフォーム定義作成。
-
-
-2. **生成ロジックの非同期化 (`app/services/generator.py`)**
-* 既存のワンショットスクリプトを関数化し、`api_key` や `file_path` を引数で受け取れるようにリファクタリング。
-
-
-3. **エンドポイント実装 (`main.py`)**
-* `/generate_explanation` と `/download_explanation` の実装。
-
-
-4. **ローカル動作テスト**
-* Swagger UI (`/docs`) または `curl` を用いた画像アップロード・生成テスト。
+実装済み。今後は運用（ZIPキャッシュのクリーンアップ運用、監視、UI整備）を優先する。
 
 ---
 
@@ -281,13 +275,13 @@ uvicorn main:app --reload
 
 ### A. 目的と互換方針
 * 既存の `oneshot_pipeline` を **API 1回呼び出しで同等の成果物**（Markdown、PDF）に変換できること。 
-* **メタデータ生成とDOCX生成については実装しない。** 
+* **DOCX生成は実装しない。** 
 * 既存スクリプトの処理順と出力ディレクトリ構造を維持し、差分検証が容易な形で移植する。
 * APIキーは `multipart/form-data` の `api_key` を優先し、未指定時のみ `GEMINI_API_KEY` を参照する。
 
 ### B. 推奨エンドポイント（Pipeline型）
 1. **解説生成パイプライン開始**
-   * **URL**: `POST /api/v1/legacy/pipeline`
+   * **URL**: `POST /api/v1/pipeline`
    * **Content-Type**: `multipart/form-data`
    * **Parameters (Form Data)**:
      * `api_key` (String, optional) - Gemini API Key（未指定時は環境変数フォールバック）
@@ -301,54 +295,37 @@ uvicorn main:app --reload
    ```json
    {
      "status": "accepted",
-     "job_id": "legacy-20251210-001234",
-     "message": "legacy_scriptsパイプラインを開始しました。完了後にダウンロードしてください。"
+     "job_id": "pipeline-20251210-001234",
+     "message": "パイプラインを開始しました。完了後にダウンロードしてください。"
    }
    ```
 
 2. **処理状況確認**
-   * **URL**: `GET /api/v1/legacy/pipeline/{job_id}`
+   * **URL**: `GET /api/v1/pipeline/{job_id}`
    * **Response**:
      * `200 OK`（完了）
      * `202 Accepted`（処理中）
      * `404/410`（不在/期限切れ）
 
 3. **成果物ダウンロード**
-   * **URL**: `GET /api/v1/legacy/pipeline/{job_id}/download`
+   * **URL**: `GET /api/v1/pipeline/{job_id}/download`
    * **Response**:
      * `200 OK` + ZIP（`markdown/`, `pdf/`, `status.json`）
 
 ### C. 推奨エンドポイント（ステップ単体・デバッグ用、必要なら）
-* `POST /api/v1/legacy/generate_markdown`  
+* `POST /api/v1/pipeline/generate_markdown`  
   入力ファイル → Markdown を生成。`generate_answer_md-v2.2.py` 相当。
-* `POST /api/v1/legacy/convert_markdown`  
+* `POST /api/v1/pipeline/convert_markdown`  
   Markdown → PDF。`convert_md_to_pdfs-v3.6.py` 相当（DOCX/脚注付きMarkdownは無効）。
 
 ### D. 入力変換ポリシー
 * 画像入力（JPEG/PNG）は **PDF化して Gemini に送信** する。
-* 生成物は `data/outputs/{job_id}/` 配下に、legacy_scriptsと同一の構造で保存する。
-* メタデータYAMLとDOCXの生成は行わない。
+* 生成物は `data/outputs/{job_id}/markdown` と `metadata.json` を保存する。
+* PDF はダウンロード時に生成し、ZIPに同梱する。
+* ZIP は生成後 1 週間保存する。
 
 ---
 
 ## 8. legacy_scripts 移植の実装計画（FastAPI）
 
-1. **既存スクリプトの関数化**
-* `generate_answer_md-v2.2.py` を `app/services/legacy/generate_markdown.py` に移植（Gemini呼び出しとPDF化）。
-* `convert_md_to_pdfs-v3.6.py` を `app/services/legacy/convert_markdown.py` に移植（pandoc/LuaLaTeX変換、DOCX生成は移植しない）。
-
-2. **ファイル配置と成果物レイアウト**
-* 入力: `data/inputs/{job_id}/` に保存。
-* 出力: `data/outputs/{job_id}/markdown`, `pdf`。
-* **markdown_with_attrib/** はAPI出力に含めない。
-* `status.json` に段階状態（queued/generating_md/converting/done/failed）を保存。
-* Pandocヘッダーは `app/services/legacy/pandoc-header-v1.0.tex` に統合し、`legacy_scripts/` に依存しない。
-* 引用ブロックの脚注文は `大学名 + 年度 + 科目 + 著者` を含める。
-
-3. **APIエンドポイント実装**
-* `POST /api/v1/legacy/pipeline` を BackgroundTasks で実行し、1リクエスト=1ジョブの非同期処理に統一。
-* 必要に応じてステップ単体エンドポイントを追加（デバッグ/再処理用途）。
-
-4. **互換性検証**
-* legacy_scriptsの単体出力とAPI出力を同一入力で比較（Markdown/PDF）。
-* 画像入力の変換結果を重点確認。
+実装完了。仕様変更時は `app/services/legacy/` と `main.py` を更新する。

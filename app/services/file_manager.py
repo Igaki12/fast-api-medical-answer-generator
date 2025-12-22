@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
+import time
 from pathlib import Path
 from typing import Iterable, Optional
 
@@ -29,12 +30,16 @@ def ensure_job_output_dir(job_id: str) -> Path:
     return path
 
 
+def utcnow_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
 def write_status(job_id: str, status: str, message: str | None = None, extra: dict | None = None) -> None:
     payload = {
         "job_id": job_id,
         "status": status,
         "message": message,
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": utcnow_iso(),
     }
     if extra:
         payload.update(extra)
@@ -47,6 +52,19 @@ def read_status(job_id: str) -> Optional[dict]:
     if not status_path.exists():
         return None
     return json.loads(status_path.read_text(encoding="utf-8"))
+
+
+def write_metadata(job_id: str, metadata: dict) -> Path:
+    metadata_path = ensure_job_output_dir(job_id) / "metadata.json"
+    metadata_path.write_text(json.dumps(metadata, ensure_ascii=True, indent=2), encoding="utf-8")
+    return metadata_path
+
+
+def read_metadata(job_id: str) -> Optional[dict]:
+    metadata_path = OUTPUTS_DIR / job_id / "metadata.json"
+    if not metadata_path.exists():
+        return None
+    return json.loads(metadata_path.read_text(encoding="utf-8"))
 
 
 def create_zip(job_id: str, outputs: Iterable[Path]) -> Path:
@@ -67,7 +85,21 @@ def find_zip(job_id: str) -> Optional[Path]:
     return None
 
 
-def create_legacy_zip(job_id: str) -> Path:
+def find_fresh_zip(job_id: str, max_age_days: int) -> Optional[Path]:
+    zip_path = find_zip(job_id)
+    if not zip_path:
+        return None
+    age_seconds = time.time() - zip_path.stat().st_mtime
+    if age_seconds <= max_age_days * 86400:
+        return zip_path
+    try:
+        zip_path.unlink()
+    except Exception:
+        pass
+    return None
+
+
+def create_pipeline_zip(job_id: str) -> Path:
     import zipfile
 
     output_dir = ensure_job_output_dir(job_id)
@@ -76,6 +108,10 @@ def create_legacy_zip(job_id: str) -> Path:
         status_path = output_dir / "status.json"
         if status_path.exists():
             archive.write(status_path, arcname="status.json")
+
+        metadata_path = output_dir / "metadata.json"
+        if metadata_path.exists():
+            archive.write(metadata_path, arcname="metadata.json")
 
         for folder in ("markdown", "pdf"):
             folder_path = output_dir / folder
@@ -86,3 +122,7 @@ def create_legacy_zip(job_id: str) -> Path:
                     arcname = f"{folder}/{path.relative_to(folder_path)}"
                     archive.write(path, arcname=arcname)
     return zip_path
+
+
+def create_legacy_zip(job_id: str) -> Path:
+    return create_pipeline_zip(job_id)

@@ -150,12 +150,12 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 
 React 側は次のステートを持ちます（AGENTS.md準拠）。
 - `jobId: string`
-- `status: "queued" | "generating_md" | "converting" | "processing" | "done" | "failed" | "expired" | ...`
+- `status: "queued" | "generating_md" | "done" | "failed" | "failed_to_convert" | "expired" | ...`
 - `progress?: number`（もしAPIが返すなら）
 - `message?: string` / `error?: string`
 
 ### 5.1 ジョブ開始（upload / start）
-例：`POST /api/v1/legacy/pipeline`（legacy pipeline）  
+例：`POST /api/v1/pipeline`  
 `multipart/form-data` で PDF 等とメタデータを送信します。  
 `api_key` は **任意**（未指定時はサーバー環境変数へフォールバック）。
 
@@ -181,20 +181,20 @@ export async function startLegacyPipeline(params: StartLegacyPipelineParams) {
   fd.append("author", params.author);
 
   return apiFetch<{ job_id: string }>(
-    "/api/v1/legacy/pipeline",
+    "/api/v1/pipeline",
     { method: "POST", body: fd },
   );
 }
 ```
 
 ### 5.2 ステータス確認（polling）
-例：`GET /api/v1/legacy/pipeline/{job_id}`  
+例：`GET /api/v1/pipeline/{job_id}`  
 一定間隔でポーリングします（例：2〜5秒）。
 
 ```ts
 export async function getJobStatus(jobId: string) {
   return apiFetch<{ status: string; message?: string; error?: string }>(
-    `/api/v1/legacy/pipeline/${encodeURIComponent(jobId)}`
+    `/api/v1/pipeline/${encodeURIComponent(jobId)}`
   );
 }
 ```
@@ -205,13 +205,13 @@ export async function getJobStatus(jobId: string) {
 - 失敗時は `detail` / `error` を画面に出す（問い合わせに必要）
 
 ### 5.3 ダウンロード（zip 等）
-例：`GET /api/v1/legacy/pipeline/{job_id}/download`  
+例：`GET /api/v1/pipeline/{job_id}/download`  
 `fetch` + `Blob` で保存します。
 
 ```ts
 export async function downloadResult(jobId: string) {
   const res = await fetch(
-    `/api/v1/legacy/pipeline/${encodeURIComponent(jobId)}/download`
+    `/api/v1/pipeline/${encodeURIComponent(jobId)}/download`
   );
   if (!res.ok) throw new Error(`Download failed: ${res.status}`);
 
