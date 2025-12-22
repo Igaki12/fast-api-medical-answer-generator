@@ -33,35 +33,35 @@ React からの API 呼び出しは `fetch()` を使用し、ジョブ開始後�
 
 ```
 fast-api-medical-answer-generator/
-  AGENTS.md
-  AGENTS_for_React.md
-  AGENTS_for_legacy_scripts.md
-  README.md
-  main.py
-  requirements-min.txt
-  app/
-    auth.py
-    models.py
-    services/
-      generator.py
-      file_manager.py
-      legacy/
-        convert_markdown.py
-        generate_markdown.py
-        pipeline.py
-        pandoc-header-v1.0.tex
-  legacy_scripts/
-  references/
-  data/
-    inputs/
-    outputs/
-  frontend/             # 追加: React (Vite想定)
-    src/
-    public/
-    package.json
-    vite.config.ts
-  deploy/               # 追加: Nginx/Apacheの設定サンプル（任意）
-    nginx/ or apache/
+├──AGENTS.md
+├──AGENTS_for_React.md
+├──AGENTS_for_legacy_scripts.md
+├──README.md
+├──main.py
+├──requirements-min.txt
+├──app/
+│  ├──auth.py
+│  ├──models.py
+│  └──services/
+│     ├──generator.py
+│     ├──file_manager.py
+│     └──legacy/
+│        ├──convert_markdown.py
+│        ├──generate_markdown.py
+│        ├──pipeline.py
+│        └──pandoc-header-v1.0.tex
+├──legacy_scripts/
+├──references/
+├──data/
+│   ├──inputs/
+│   └──outputs/
+├──frontend/             # 追加: React (Vite想定)
+│   ├──src/
+│   ├──public/
+│   ├──package.json
+│   └──vite.config.ts
+└──deploy/               # 追加: Nginx/Apacheの設定サンプル（任意）
+    └──nginx/ or apache/
 ```
 
 > 既存構造は `main.py` + `app/` 直下で FastAPI を動かす構成です。  
