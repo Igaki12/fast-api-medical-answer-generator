@@ -72,6 +72,7 @@ def generate_markdown_from_input(
                     mime_type="application/pdf",
                     data=pdf_bytes,
                 ),
+                media_resolution={"level": "media_resolution_high"},
             ),
             types.Part(text=prompt),
         ],

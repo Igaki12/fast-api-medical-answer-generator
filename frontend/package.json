@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "postbuild": "rm -rf ../docs && cp -R dist ../docs",
     "preview": "vite preview"
   },
   "dependencies": {
