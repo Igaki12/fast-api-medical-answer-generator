@@ -141,7 +141,7 @@ GET /api/v1/pipeline/{job_id}/download
 
 実行方法
 
-./pipeline_download_all.sh ./job_ids.csv
+./pipeline_download_all.sh "/Users/embryo03/Documents/GitHub/fast-api-medical-answer-generator/references/job_ids.csv"
 
 保存先
 

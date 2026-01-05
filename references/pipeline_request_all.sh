@@ -8,10 +8,10 @@ BASIC_USER="${BASIC_USER:-dev}"
 BASIC_PASS="${BASIC_PASS:-dev}"
 
 # 対象フォルダ（この中の *.pdf を全部送る）
-TARGET_DIR="${1:-/Users/embryo03/Documents/medteria/PoC-神戸大学-3回生/PoC-神戸大学-3年_3-2-7_精神科}"
+TARGET_DIR="${1:-/Users/embryo03/Documents/medteria/PoC-神戸大学-3回生/PoC-神戸大学-3年_4-3-1_感染症内科}"
 
 UNIVERSITY="${UNIVERSITY:-神戸大学}"
-SUBJECT="${SUBJECT:-精神科}"
+SUBJECT="${SUBJECT:-感染症内科}"
 AUTHOR="${AUTHOR:-PoC}"
 
 # job_id 保存先（CSV）
