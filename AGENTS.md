@@ -117,7 +117,11 @@ project-root/
 │           └── pandoc-header-v1.0.tex # 統合済みPandocヘッダー
 │
 ├── references/
-│   └── (md_files)
+│   └── (md_files, sh, csv)
+│
+├── docs/
+│   ├── assets/
+│   └── meetings/            # ミーティング議事録/進捗報告
 │
 ├── legacy_scripts/          # 既存のワンショット実行スクリプト群
 │
