@@ -127,7 +127,7 @@ project-root/
 │
 └── data/                    # 【Git管理外】
     ├── inputs/              # アップロードされた過去問ファイル(PDF/IMG)
-    └── outputs/             # 生成された解説(ZIP/PDF)
+    └── outputs/             # 生成された解説(PDF)
 
 ```
 
@@ -148,7 +148,7 @@ project-root/
 
 1. **Request**: ファイルとメタデータを受け付け、即座に `Job ID` を返す。
 2. **Process**: FastAPIの `BackgroundTasks` によりバックグラウンドで生成を実行。
-3. **Download**: クライアントは `Job ID` を使ってポーリングを行い、完了次第成果物（ZIP）を取得する。
+3. **Download**: クライアントは `Job ID` を使ってポーリングを行い、完了次第成果物（PDF）を取得する。
 
 ### C. セキュリティ・キー管理
 
@@ -209,14 +209,14 @@ project-root/
 
 * **URL**: `GET /api/v1/pipeline/{job_id}/download`
 * **概要**: ジョブIDに基づいて生成状況を確認または成果物をダウンロードする。  
-  ダウンロード時に Markdown から PDF を生成し、ZIP に同梱する。
+  ダウンロード時に Markdown から PDF を生成して返す。
 
 **Responseパターン:**
 
 1. **処理完了 (Status 200)**
 * **Status**: `200 OK`
-* **Header**: `Content-Disposition: attachment; filename="result.zip"`
-* **Body**: ZIPファイル（`markdown/`, `pdf/`, `status.json`, `metadata.json`）
+* **Header**: `Content-Disposition: attachment; filename="{explanation_name}.pdf"`
+* **Body**: PDFファイル
 
 
 2. **処理中 (Status 202)**
@@ -234,9 +234,9 @@ project-root/
 
 
 
-3. **エラー/不在 (Status 404/410)**
+3. **エラー/不在 (Status 404/409/410)**
 * **Status**: `404 Not Found` (ID不一致) または `410 Gone` (有効期限切れ)
-* **PDF変換失敗**: `status.json` の `status` が `failed_to_convert` に更新され、ZIPは `markdown/` と `metadata.json` のみを含む
+* **PDF変換失敗**: `status.json` の `status` が `failed_to_convert` に更新され、ダウンロードは `409 Conflict` を返す
 
 
 
@@ -258,7 +258,7 @@ uvicorn main:app --reload
 
 ## 5. 次のステップ
 
-実装済み。今後は運用（ZIPキャッシュのクリーンアップ運用、監視、UI整備）を優先する。
+実装済み。今後は運用（PDFキャッシュのクリーンアップ運用、監視、UI整備）を優先する。
 
 ---
 
@@ -314,7 +314,7 @@ uvicorn main:app --reload
 3. **成果物ダウンロード**
    * **URL**: `GET /api/v1/pipeline/{job_id}/download`
    * **Response**:
-     * `200 OK` + ZIP（`markdown/`, `pdf/`, `status.json`）
+     * `200 OK` + PDF
 
 ### C. 推奨エンドポイント（ステップ単体・デバッグ用、必要なら）
 * `POST /api/v1/pipeline/generate_markdown`  
@@ -325,8 +325,8 @@ uvicorn main:app --reload
 ### D. 入力変換ポリシー
 * 画像入力（JPEG/PNG）は **PDF化して Gemini に送信** する。
 * 生成物は `data/outputs/{job_id}/markdown` と `metadata.json` を保存する。
-* PDF はダウンロード時に生成し、ZIPに同梱する。
-* ZIP は生成後 1 週間保存する。
+* PDF はダウンロード時に生成し、`data/outputs/{job_id}/` に `explanation_name.pdf` で保存する。
+* PDF は生成後 1 週間保存する。
 
 ---
 

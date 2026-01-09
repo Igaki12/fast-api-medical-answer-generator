@@ -47,18 +47,18 @@ def run_pipeline(
     return md_path
 
 
-def prepare_download_zip(job_id: str) -> Path:
+def prepare_download_pdf(job_id: str) -> Path:
     output_dir = file_manager.ensure_job_output_dir(job_id)
-    zip_path = file_manager.find_fresh_zip(job_id, max_age_days=7)
-    if zip_path:
-        return zip_path
-
     status = file_manager.read_status(job_id) or {}
     if status.get("status") == "failed_to_convert":
-        zip_path = file_manager.create_pipeline_zip(job_id)
-        return zip_path
+        raise RuntimeError("PDF conversion previously failed for this job.")
 
     metadata = file_manager.read_metadata(job_id) or {}
+    filename = file_manager.build_pdf_filename(job_id, metadata.get("explanation_name"))
+    pdf_path = file_manager.find_fresh_pdf(job_id, filename, max_age_days=7)
+    if pdf_path:
+        return pdf_path
+
     attribution_text = _build_attribution_text(
         metadata.get("university", ""),
         metadata.get("year", ""),
@@ -70,21 +70,20 @@ def prepare_download_zip(job_id: str) -> Path:
         raise RuntimeError("Markdown files are missing for this job.")
 
     try:
-        for md_path in md_paths:
-            convert_markdown.convert_markdown_to_pdf(
-                md_path=md_path,
-                output_dir=output_dir,
-                attribution_text=attribution_text,
-            )
+        target_md = _select_latest_markdown(md_paths)
+        generated_pdf = convert_markdown.convert_markdown_to_pdf(
+            md_path=target_md,
+            output_dir=output_dir,
+            attribution_text=attribution_text,
+        )
     except Exception as exc:
         file_manager.write_status(job_id, "failed_to_convert", message=str(exc))
-        _cleanup_conversion_artifacts(output_dir)
-        zip_path = file_manager.create_pipeline_zip(job_id)
-        return zip_path
+        _cleanup_conversion_artifacts(output_dir, keep_pdf=False)
+        raise
 
-    zip_path = file_manager.create_pipeline_zip(job_id)
-    _cleanup_conversion_artifacts(output_dir)
-    return zip_path
+    cached_pdf = file_manager.cache_job_pdf(job_id, filename, generated_pdf)
+    _cleanup_conversion_artifacts(output_dir, keep_pdf=False)
+    return cached_pdf
 
 
 def _build_attribution_text(university: str, year: str, subject: str, author: str) -> str:
@@ -103,9 +102,16 @@ def _collect_markdown_files(markdown_dir: Path) -> list[Path]:
     return sorted(path for path in markdown_dir.rglob("*.md") if path.is_file())
 
 
-def _cleanup_conversion_artifacts(output_dir: Path) -> None:
+def _select_latest_markdown(md_paths: list[Path]) -> Path:
+    return max(md_paths, key=lambda path: (path.stat().st_mtime, path.name))
+
+
+def _cleanup_conversion_artifacts(output_dir: Path, keep_pdf: bool) -> None:
     import shutil
 
-    for name in ("pdf", ".tmp", ".pandoc-tmp"):
+    names = [".tmp", ".pandoc-tmp"]
+    if not keep_pdf:
+        names.append("pdf")
+    for name in names:
         path = output_dir / name
         shutil.rmtree(path, ignore_errors=True)

@@ -12,6 +12,13 @@ import {
   Heading,
   HStack,
   Input,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
   SimpleGrid,
   SlideFade,
   Stack,
@@ -22,11 +29,16 @@ import { ApiError, downloadResult, getJobStatus, startLegacyPipeline } from "./l
 import { keyframes } from "@emotion/react";
 
 const STORAGE_KEY = "pipeline_jobs";
+const FORM_STORAGE_KEY = "pipeline_form_defaults";
 
 type JobRecord = {
   jobId: string;
   status: string;
   explanationName: string;
+  year?: string;
+  subject?: string;
+  university?: string;
+  author?: string;
   createdAt: string;
   updatedAt: string;
   message?: string;
@@ -40,6 +52,7 @@ const tips = [
 ];
 
 const statusLabels: Record<string, string> = {
+  accepted: "受付済み",
   queued: "受付済み",
   generating_md: "Markdown 生成中",
   done: "完了",
@@ -49,6 +62,7 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusBadgeStyles: Record<string, { bg: string; color: string }> = {
+  accepted: { bg: "#F8E9C6", color: "#6D5F4B" },
   queued: { bg: "#F8E9C6", color: "#6D5F4B" },
   generating_md: { bg: "#FBE7B3", color: "#6D5F4B" },
   done: { bg: "#E6F4DD", color: "#2B593F" },
@@ -56,6 +70,8 @@ const statusBadgeStyles: Record<string, { bg: string; color: string }> = {
   failed_to_convert: { bg: "#F2E0C8", color: "#6D5F4B" },
   expired: { bg: "#EFE7DA", color: "#6D5F4B" }
 };
+
+const pendingStatuses = ["accepted", "queued", "generating_md", "processing", "running", "converting"];
 
 function loadJobs(): JobRecord[] {
   try {
@@ -73,19 +89,83 @@ function saveJobs(jobs: JobRecord[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
 }
 
+type FormDefaults = {
+  year: string;
+  subject: string;
+  university: string;
+  author: string;
+  explanationName: string;
+};
+
+function loadFormDefaults(): Partial<FormDefaults> {
+  try {
+    const raw = localStorage.getItem(FORM_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return {};
+    return parsed as Partial<FormDefaults>;
+  } catch {
+    return {};
+  }
+}
+
+function saveFormDefaults(values: FormDefaults) {
+  localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(values));
+}
+
 function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString("ja-JP");
 }
 
+type StatusResult = {
+  jobId: string;
+  data?: { status?: string; message?: string; error?: string };
+  error?: unknown;
+};
+
+function mergeStatusResults(prev: JobRecord[], results: StatusResult[]) {
+  const now = new Date().toISOString();
+  return prev.map((job) => {
+    const match = results.find((item) => item.jobId === job.jobId);
+    if (!match) return job;
+    if (match.error) {
+      if (match.error instanceof ApiError && [404, 410].includes(match.error.status)) {
+        return {
+          ...job,
+          status: "expired",
+          updatedAt: now,
+          error: match.error.message
+        };
+      }
+      return {
+        ...job,
+        updatedAt: now,
+        error: match.error instanceof Error ? match.error.message : "Unknown error"
+      };
+    }
+    if (!match.data) {
+      return job;
+    }
+    return {
+      ...job,
+      status: match.data.status ?? job.status,
+      message: match.data.message,
+      error: match.data.error,
+      updatedAt: now
+    };
+  });
+}
+
 export default function App() {
+  const defaults = loadFormDefaults();
   const [apiKey, setApiKey] = useState("");
-  const [year, setYear] = useState("");
-  const [subject, setSubject] = useState("");
-  const [university, setUniversity] = useState("");
-  const [author, setAuthor] = useState("");
-  const [explanationName, setExplanationName] = useState("");
+  const [year, setYear] = useState(defaults.year ?? "");
+  const [subject, setSubject] = useState(defaults.subject ?? "");
+  const [university, setUniversity] = useState(defaults.university ?? "");
+  const [author, setAuthor] = useState(defaults.author ?? "");
+  const [explanationName, setExplanationName] = useState(defaults.explanationName ?? "");
   const [userEditedName, setUserEditedName] = useState(false);
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -93,6 +173,17 @@ export default function App() {
   const [jobs, setJobs] = useState<JobRecord[]>(() => loadJobs());
   const [tipIndex, setTipIndex] = useState(0);
   const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [retryJob, setRetryJob] = useState<JobRecord | null>(null);
+  const [retryApiKey, setRetryApiKey] = useState("");
+  const [retryYear, setRetryYear] = useState("");
+  const [retrySubject, setRetrySubject] = useState("");
+  const [retryUniversity, setRetryUniversity] = useState("");
+  const [retryAuthor, setRetryAuthor] = useState("");
+  const [retryExplanationName, setRetryExplanationName] = useState("");
+  const [retryUserEditedName, setRetryUserEditedName] = useState(false);
+  const [retryFile, setRetryFile] = useState<File | null>(null);
+  const [isRetryOpen, setIsRetryOpen] = useState(false);
   const pollingRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -110,6 +201,27 @@ export default function App() {
   }, [year, subject, userEditedName]);
 
   useEffect(() => {
+    saveFormDefaults({
+      year: year.trim(),
+      subject: subject.trim(),
+      university: university.trim(),
+      author: author.trim(),
+      explanationName: explanationName.trim()
+    });
+  }, [year, subject, university, author, explanationName]);
+
+  useEffect(() => {
+    if (!isRetryOpen) return;
+    if (retryUserEditedName) return;
+    if (!retryYear && !retrySubject) {
+      setRetryExplanationName("");
+      return;
+    }
+    const base = [retryYear, retrySubject].filter(Boolean).join("_");
+    setRetryExplanationName(`${base}_解答解説`);
+  }, [retryYear, retrySubject, retryUserEditedName, isRetryOpen]);
+
+  useEffect(() => {
     const timer = window.setTimeout(() => {
       setTipIndex((prev) => (prev + 1) % tips.length);
     }, 4200);
@@ -118,11 +230,33 @@ export default function App() {
 
   const pendingJobs = useMemo(
     () =>
-      jobs.filter((job) =>
-        ["queued", "generating_md", "processing", "running", "converting"].includes(job.status)
-      ),
+      jobs.filter((job) => pendingStatuses.includes(job.status)),
     [jobs]
   );
+
+  const refreshPendingJobs = async () => {
+    setErrorMessage(null);
+    const targets = jobs.filter((job) => pendingStatuses.includes(job.status));
+    if (targets.length === 0) {
+      setStatusMessage("更新する待機中ジョブがありません。");
+      return;
+    }
+    setIsRefreshing(true);
+    setStatusMessage("ステータスを更新中...");
+    const results = await Promise.all(
+      targets.map(async (job) => {
+        try {
+          const data = await getJobStatus(job.jobId);
+          return { jobId: job.jobId, data };
+        } catch (error) {
+          return { jobId: job.jobId, error };
+        }
+      })
+    );
+    setJobs((prev) => mergeStatusResults(prev, results));
+    setIsRefreshing(false);
+    setStatusMessage("ステータスを更新しました。");
+  };
 
   useEffect(() => {
     if (pendingJobs.length === 0) return;
@@ -143,38 +277,8 @@ export default function App() {
         })
       );
 
-      setJobs((prev) =>
-        prev.map((job) => {
-          const match = results.find((item) => item.jobId === job.jobId);
-          if (!match) return job;
-          if (match.error) {
-            if (match.error instanceof ApiError && [404, 410].includes(match.error.status)) {
-              return {
-                ...job,
-                status: "expired",
-                updatedAt: new Date().toISOString(),
-                error: match.error.message
-              };
-            }
-            return {
-              ...job,
-              updatedAt: new Date().toISOString(),
-              error: match.error instanceof Error ? match.error.message : "Unknown error"
-            };
-          }
-          if (!match.data) {
-            return job;
-          }
-          return {
-            ...job,
-            status: match.data.status ?? job.status,
-            message: match.data.message,
-            error: match.data.error,
-            updatedAt: new Date().toISOString()
-          };
-        })
-      );
-    }, 2600);
+      setJobs((prev) => mergeStatusResults(prev, results));
+    }, 10000);
 
     return () => {
       controller.abort();
@@ -191,6 +295,14 @@ export default function App() {
     university.trim() &&
     author.trim() &&
     inputFile;
+
+  const retryCanSubmit =
+    retryExplanationName.trim() &&
+    retryYear.trim() &&
+    retrySubject.trim() &&
+    retryUniversity.trim() &&
+    retryAuthor.trim() &&
+    retryFile;
 
   const onSubmit = async () => {
     if (!inputFile || !canSubmit) {
@@ -216,11 +328,22 @@ export default function App() {
         jobId: res.job_id,
         status: res.status ?? "queued",
         explanationName: explanationName.trim(),
+        year: year.trim(),
+        subject: subject.trim(),
+        university: university.trim(),
+        author: author.trim(),
         createdAt: now,
         updatedAt: now,
         message: res.message
       };
 
+      saveFormDefaults({
+        year: year.trim(),
+        subject: subject.trim(),
+        university: university.trim(),
+        author: author.trim(),
+        explanationName: explanationName.trim()
+      });
       setJobs((prev) => [job, ...prev]);
       setStatusMessage("ジョブを受付しました。完了までお待ちください。");
     } catch (error) {
@@ -235,15 +358,101 @@ export default function App() {
     try {
       await downloadResult(jobId);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "ダウンロードに失敗しました。");
+      if (error instanceof ApiError && error.status === 409) {
+        setJobs((prev) =>
+          prev.map((job) =>
+            job.jobId === jobId
+              ? {
+                  ...job,
+                  status: "failed_to_convert",
+                  updatedAt: new Date().toISOString(),
+                  error: "PDF変換に失敗しました。再試行してください。"
+                }
+              : job
+          )
+        );
+        setErrorMessage("PDF変換に失敗しました。再試行してください。");
+      } else {
+        setErrorMessage(error instanceof Error ? error.message : "ダウンロードに失敗しました。");
+      }
     } finally {
       setDownloadingJobId(null);
     }
   };
 
+  const openRetryModal = (job: JobRecord) => {
+    const stored = loadFormDefaults();
+    setRetryJob(job);
+    setRetryApiKey("");
+    setRetryYear(job.year ?? stored.year ?? "");
+    setRetrySubject(job.subject ?? stored.subject ?? "");
+    setRetryUniversity(job.university ?? stored.university ?? "");
+    setRetryAuthor(job.author ?? stored.author ?? "");
+    setRetryExplanationName(job.explanationName || stored.explanationName || "");
+    setRetryUserEditedName(Boolean(job.explanationName || stored.explanationName));
+    setRetryFile(null);
+    setIsRetryOpen(true);
+  };
+
+  const closeRetryModal = () => {
+    setIsRetryOpen(false);
+    setRetryJob(null);
+    setRetryFile(null);
+  };
+
+  const onRetrySubmit = async () => {
+    if (!retryFile || !retryCanSubmit) {
+      setErrorMessage("必須項目を入力し、ファイルを選択してください。");
+      return;
+    }
+    setErrorMessage(null);
+    setStatusMessage("ジョブを開始しています...");
+
+    try {
+      const res = await startLegacyPipeline({
+        apiKey: retryApiKey.trim() || undefined,
+        file: retryFile,
+        explanationName: retryExplanationName.trim(),
+        university: retryUniversity.trim(),
+        year: retryYear.trim(),
+        subject: retrySubject.trim(),
+        author: retryAuthor.trim()
+      });
+
+      const now = new Date().toISOString();
+      const job: JobRecord = {
+        jobId: res.job_id,
+        status: res.status ?? "queued",
+        explanationName: retryExplanationName.trim(),
+        year: retryYear.trim(),
+        subject: retrySubject.trim(),
+        university: retryUniversity.trim(),
+        author: retryAuthor.trim(),
+        createdAt: now,
+        updatedAt: now,
+        message: res.message
+      };
+
+      saveFormDefaults({
+        year: retryYear.trim(),
+        subject: retrySubject.trim(),
+        university: retryUniversity.trim(),
+        author: retryAuthor.trim(),
+        explanationName: retryExplanationName.trim()
+      });
+
+      setJobs((prev) => [job, ...prev]);
+      setStatusMessage("ジョブを受付しました。完了までお待ちください。");
+      closeRetryModal();
+    } catch (error) {
+      setStatusMessage(null);
+      setErrorMessage(error instanceof Error ? error.message : "送信に失敗しました。");
+    }
+  };
+
   const loadingBar = keyframes`
-    0% { transform: translateX(-30%); }
-    100% { transform: translateX(130%); }
+    0% { transform: scaleX(0); }
+    100% { transform: scaleX(1); }
   `;
 
   const shapeShift = keyframes`
@@ -314,6 +523,8 @@ export default function App() {
                         value={apiKey}
                         onChange={(event) => setApiKey(event.target.value)}
                         placeholder="Gemini API Key"
+                        type="password"
+                        autoComplete="new-password"
                         focusBorderColor="brand.gold"
                       />
                     </FormControl>
@@ -436,9 +647,20 @@ export default function App() {
           </Box>
 
           <Box>
-            <Heading size="md" mb={4}>
-              ジョブ一覧
-            </Heading>
+            <HStack justify="space-between" mb={4} flexWrap="wrap">
+              <Heading size="md">ジョブ一覧</Heading>
+              <Button
+                size="sm"
+                variant="outline"
+                borderColor="brand.gold"
+                color="brand.ink"
+                _hover={{ bg: "brand.gold", color: "brand.ink" }}
+                onClick={refreshPendingJobs}
+                isDisabled={pendingJobs.length === 0 || isRefreshing}
+              >
+                更新する
+              </Button>
+            </HStack>
             {jobs.length === 0 ? (
               <Box
                 border="1px dashed"
@@ -458,7 +680,13 @@ export default function App() {
                     bg: "#EFE7DA",
                     color: "#6D5F4B"
                   };
-                  const isDownloadable = ["done", "failed_to_convert"].includes(job.status);
+                  const createdAtMs = new Date(job.createdAt).getTime();
+                  const isStalled =
+                    job.status === "generating_md" &&
+                    Number.isFinite(createdAtMs) &&
+                    Date.now() - createdAtMs >= 30 * 60 * 1000;
+                  const isDownloadable = job.status === "done";
+                  const isRetryable = job.status === "failed_to_convert" || isStalled;
                   const isDownloading = downloadingJobId === job.jobId;
 
                   return (
@@ -500,10 +728,11 @@ export default function App() {
                               position="absolute"
                               top={0}
                               left={0}
-                              w="40%"
+                              w="100%"
                               h="100%"
                               bg="brand.gold"
-                              animation={`${loadingBar} 1.4s linear infinite`}
+                              transformOrigin="left"
+                              animation={`${loadingBar} 2.2s ease-in-out infinite`}
                             />
                           </Box>
                           <Box
@@ -538,18 +767,38 @@ export default function App() {
                             {job.error}
                           </Text>
                         ) : null}
-                        {isDownloadable ? (
-                          <Button
-                            alignSelf="flex-start"
-                            size="sm"
-                            bg="brand.gold"
-                            color="brand.ink"
-                            _hover={{ bg: "brand.goldDeep", color: "white" }}
-                            onClick={() => handleDownload(job.jobId)}
-                          >
-                            ダウンロードする
-                          </Button>
-                        ) : null}
+                        <HStack spacing={3} flexWrap="wrap">
+                          {isDownloadable ? (
+                            <Button
+                              alignSelf="flex-start"
+                              size="sm"
+                              bg="brand.gold"
+                              color="brand.ink"
+                              _hover={{ bg: "brand.goldDeep", color: "white" }}
+                              onClick={() => handleDownload(job.jobId)}
+                            >
+                              ダウンロードする
+                            </Button>
+                          ) : null}
+                          {isRetryable ? (
+                            <>
+                              <Text fontSize="xs" color="brand.muted">
+                                エラーが発生したかも？
+                              </Text>
+                              <Button
+                                alignSelf="flex-start"
+                                size="sm"
+                                variant="outline"
+                                borderColor="brand.gold"
+                                color="brand.ink"
+                                _hover={{ bg: "brand.gold", color: "brand.ink" }}
+                                onClick={() => openRetryModal(job)}
+                              >
+                                もう一度試す
+                              </Button>
+                            </>
+                          ) : null}
+                        </HStack>
                       </VStack>
                     </Box>
                   );
@@ -559,6 +808,110 @@ export default function App() {
           </Box>
         </VStack>
       </Container>
+
+      <Modal isOpen={isRetryOpen} onClose={closeRetryModal} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>もう一度試す</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4} align="stretch">
+              <Text fontSize="sm" color="brand.muted">
+                前回の入力をできるだけ引き継いでいます。必要な箇所だけ修正してください。
+              </Text>
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                <FormControl>
+                  <FormLabel>APIキー（任意）</FormLabel>
+                  <Input
+                    value={retryApiKey}
+                    onChange={(event) => setRetryApiKey(event.target.value)}
+                    placeholder="Gemini API Key"
+                    focusBorderColor="brand.gold"
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>年度</FormLabel>
+                  <Input
+                    value={retryYear}
+                    onChange={(event) => setRetryYear(event.target.value)}
+                    placeholder="2024"
+                    focusBorderColor="brand.gold"
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>科目名</FormLabel>
+                  <Input
+                    value={retrySubject}
+                    onChange={(event) => setRetrySubject(event.target.value)}
+                    placeholder="生化学"
+                    focusBorderColor="brand.gold"
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>大学名</FormLabel>
+                  <Input
+                    value={retryUniversity}
+                    onChange={(event) => setRetryUniversity(event.target.value)}
+                    placeholder="東京大学"
+                    focusBorderColor="brand.gold"
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>作成者名</FormLabel>
+                  <Input
+                    value={retryAuthor}
+                    onChange={(event) => setRetryAuthor(event.target.value)}
+                    placeholder="佐藤先生"
+                    focusBorderColor="brand.gold"
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>解説タイトル</FormLabel>
+                  <Input
+                    value={retryExplanationName}
+                    onChange={(event) => {
+                      setRetryExplanationName(event.target.value);
+                      setRetryUserEditedName(true);
+                    }}
+                    placeholder="2024_生化学_解答解説"
+                    focusBorderColor="brand.gold"
+                  />
+                </FormControl>
+              </SimpleGrid>
+              <FormControl>
+                <FormLabel>問題ファイル（PDF/JPEG/PNG）</FormLabel>
+                <Input
+                  type="file"
+                  accept="application/pdf,image/jpeg,image/png"
+                  onChange={(event) => setRetryFile(event.target.files?.[0] ?? null)}
+                  focusBorderColor="brand.gold"
+                />
+              </FormControl>
+              {retryJob ? (
+                <Text fontSize="xs" color="brand.muted">
+                  対象ジョブ: {retryJob.jobId}
+                </Text>
+              ) : null}
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <HStack spacing={3}>
+              <Button variant="ghost" onClick={closeRetryModal}>
+                閉じる
+              </Button>
+              <Button
+                bg="brand.gold"
+                color="brand.ink"
+                _hover={{ bg: "brand.goldDeep", color: "white" }}
+                onClick={onRetrySubmit}
+                isDisabled={!retryCanSubmit}
+              >
+                もう一度試す
+              </Button>
+            </HStack>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }

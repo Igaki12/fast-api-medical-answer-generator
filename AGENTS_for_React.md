@@ -189,7 +189,7 @@ export async function startLegacyPipeline(params: StartLegacyPipelineParams) {
 
 ### 5.2 ステータス確認（polling）
 例：`GET /api/v1/pipeline/{job_id}`  
-一定間隔でポーリングします（例：2〜5秒）。
+一定間隔でポーリングします（例：10秒）。
 
 ```ts
 export async function getJobStatus(jobId: string) {
@@ -203,10 +203,12 @@ export async function getJobStatus(jobId: string) {
 - `setInterval` より `setTimeout` で逐次ポーリング（状態に応じて間隔調整しやすい）
 - 画面遷移/アンマウント時に `AbortController` で止める
 - 失敗時は `detail` / `error` を画面に出す（問い合わせに必要）
+- `failed_to_convert` または `generating_md` が30分以上続く場合は「もう一度試す」を表示して再送信できるようにする
 
-### 5.3 ダウンロード（zip 等）
+### 5.3 ダウンロード（PDF）
 例：`GET /api/v1/pipeline/{job_id}/download`  
 `fetch` + `Blob` で保存します。
+PDF変換に失敗した場合は `409 Conflict` が返るため、UI側で再試行導線を出す。
 
 ```ts
 export async function downloadResult(jobId: string) {
@@ -220,7 +222,7 @@ export async function downloadResult(jobId: string) {
 
   const a = document.createElement("a");
   a.href = url;
-  a.download = `result_${jobId}.zip`; // 返却ヘッダContent-Dispositionがあればそれ優先でもOK
+  a.download = `result_${jobId}.pdf`; // 返却ヘッダContent-Dispositionがあればそれ優先でもOK
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -233,6 +235,7 @@ export async function downloadResult(jobId: string) {
 
 ### 5.4 WebStorage でのジョブ管理（APIアクセス削減）
 - `localStorage` に `job_id` と `status`、`explanation_name`、`created_at`、`updated_at` を保存
+- 入力フォームの `year` / `subject` / `university` / `author` / `explanation_name` も保存して再入力を省略
 - 画面ロード時は **WebStorage → 画面表示** を優先し、最新化が必要なジョブのみAPIで確認
 - ポーリング対象は `queued` / `generating_md` のみ（`done`/`failed` は一定時間後に再チェック）
 - 例: `localStorage["pipeline_jobs"]` に配列で保持
@@ -444,7 +447,7 @@ npm run build
 - `failed` の場合は `error_code` と `detail` を返す（UI表示に必要）
 
 ### 9.2 保持期間・クリーンアップ
-- 生成物 ZIP / 中間成果物の保持時間（例：24h / 7d）
+- 生成物 PDF / 中間成果物の保持時間（例：24h / 7d）
 - 期限切れ `expired` の扱い（再実行導線、削除済み表示）
 
 ### 9.3 レート制限・同時実行

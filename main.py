@@ -161,9 +161,14 @@ def pipeline_download(
             ).model_dump(),
         )
 
-    zip_path = legacy_pipeline.prepare_download_zip(job_id)
+    if status["status"] == "failed_to_convert":
+        raise HTTPException(status_code=409, detail="PDF conversion failed for this job.")
+
+    pdf_path = legacy_pipeline.prepare_download_pdf(job_id)
+    metadata = file_manager.read_metadata(job_id) or {}
+    filename = file_manager.build_pdf_filename(job_id, metadata.get("explanation_name"))
     return FileResponse(
-        zip_path,
-        filename=f"{job_id}.zip",
-        media_type="application/zip",
+        pdf_path,
+        filename=filename,
+        media_type="application/pdf",
     )

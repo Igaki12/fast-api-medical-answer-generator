@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timezone
 import time
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import Optional
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -67,62 +67,45 @@ def read_metadata(job_id: str) -> Optional[dict]:
     return json.loads(metadata_path.read_text(encoding="utf-8"))
 
 
-def create_zip(job_id: str, outputs: Iterable[Path]) -> Path:
-    import zipfile
+def build_pdf_filename(job_id: str, explanation_name: str | None) -> str:
+    import re
 
-    output_dir = ensure_job_output_dir(job_id)
-    zip_path = output_dir / f"{job_id}.zip"
-    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        for path in outputs:
-            archive.write(path, arcname=path.name)
-    return zip_path
+    base = (explanation_name or "").strip() or job_id
+    safe = base.replace("/", "_").replace("\\", "_")
+    safe = re.sub(r'[<>:"|?*\x00-\x1f]', "_", safe)
+    safe = re.sub(r"\s+", " ", safe).strip(" .")
+    if not safe:
+        safe = job_id
+    if not safe.lower().endswith(".pdf"):
+        safe = f"{safe}.pdf"
+    return safe
 
 
-def find_zip(job_id: str) -> Optional[Path]:
-    zip_path = OUTPUTS_DIR / job_id / f"{job_id}.zip"
-    if zip_path.exists():
-        return zip_path
+def find_pdf(job_id: str, filename: str) -> Optional[Path]:
+    pdf_path = OUTPUTS_DIR / job_id / filename
+    if pdf_path.exists():
+        return pdf_path
     return None
 
 
-def find_fresh_zip(job_id: str, max_age_days: int) -> Optional[Path]:
-    zip_path = find_zip(job_id)
-    if not zip_path:
+def find_fresh_pdf(job_id: str, filename: str, max_age_days: int) -> Optional[Path]:
+    pdf_path = find_pdf(job_id, filename)
+    if not pdf_path:
         return None
-    age_seconds = time.time() - zip_path.stat().st_mtime
+    age_seconds = time.time() - pdf_path.stat().st_mtime
     if age_seconds <= max_age_days * 86400:
-        return zip_path
+        return pdf_path
     try:
-        zip_path.unlink()
+        pdf_path.unlink()
     except Exception:
         pass
     return None
 
 
-def create_pipeline_zip(job_id: str) -> Path:
-    import zipfile
+def cache_job_pdf(job_id: str, filename: str, pdf_path: Path) -> Path:
+    import shutil
 
     output_dir = ensure_job_output_dir(job_id)
-    zip_path = output_dir / f"{job_id}.zip"
-    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        status_path = output_dir / "status.json"
-        if status_path.exists():
-            archive.write(status_path, arcname="status.json")
-
-        metadata_path = output_dir / "metadata.json"
-        if metadata_path.exists():
-            archive.write(metadata_path, arcname="metadata.json")
-
-        for folder in ("markdown", "pdf"):
-            folder_path = output_dir / folder
-            if not folder_path.exists():
-                continue
-            for path in folder_path.rglob("*"):
-                if path.is_file():
-                    arcname = f"{folder}/{path.relative_to(folder_path)}"
-                    archive.write(path, arcname=arcname)
-    return zip_path
-
-
-def create_legacy_zip(job_id: str) -> Path:
-    return create_pipeline_zip(job_id)
+    cached_path = output_dir / filename
+    shutil.copyfile(pdf_path, cached_path)
+    return cached_path

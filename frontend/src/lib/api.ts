@@ -68,7 +68,11 @@ export async function downloadResult(jobId: string) {
 
   const contentDisposition = res.headers.get("content-disposition") ?? "";
   const match = contentDisposition.match(/filename\*=UTF-8''([^;]+)|filename="?([^;]+)"?/i);
-  const filename = decodeURIComponent(match?.[1] || match?.[2] || `result_${jobId}.zip`);
+  let filename = decodeURIComponent(match?.[1] || match?.[2] || `${jobId}.pdf`);
+  filename = filename.trim().replace(/,pdf_$/i, ".pdf");
+  if (!filename.toLowerCase().endsWith(".pdf")) {
+    filename = `${filename}.pdf`;
+  }
 
   const a = document.createElement("a");
   a.href = url;
