@@ -55,6 +55,7 @@ const statusLabels: Record<string, string> = {
   accepted: "受付済み",
   queued: "受付済み",
   generating_md: "Markdown 生成中",
+  generating_pdf: "PDF 生成中",
   done: "完了",
   failed: "失敗",
   failed_to_convert: "PDF変換失敗（Markdownのみ）",
@@ -65,13 +66,22 @@ const statusBadgeStyles: Record<string, { bg: string; color: string }> = {
   accepted: { bg: "#F8E9C6", color: "#6D5F4B" },
   queued: { bg: "#F8E9C6", color: "#6D5F4B" },
   generating_md: { bg: "#FBE7B3", color: "#6D5F4B" },
+  generating_pdf: { bg: "#FBE1A1", color: "#6D5F4B" },
   done: { bg: "#E6F4DD", color: "#2B593F" },
   failed: { bg: "#F7D6D2", color: "#7C2E2E" },
   failed_to_convert: { bg: "#F2E0C8", color: "#6D5F4B" },
   expired: { bg: "#EFE7DA", color: "#6D5F4B" }
 };
 
-const pendingStatuses = ["accepted", "queued", "generating_md", "processing", "running", "converting"];
+const pendingStatuses = [
+  "accepted",
+  "queued",
+  "generating_md",
+  "generating_pdf",
+  "processing",
+  "running",
+  "converting"
+];
 
 function loadJobs(): JobRecord[] {
   try {
@@ -538,7 +548,7 @@ export default function App() {
                       />
                     </FormControl>
                     <FormControl>
-                      <FormLabel>科目名</FormLabel>
+                      <FormLabel>試験科目名</FormLabel>
                       <Input
                         value={subject}
                         onChange={(event) => setSubject(event.target.value)}
@@ -556,7 +566,7 @@ export default function App() {
                       />
                     </FormControl>
                     <FormControl>
-                      <FormLabel>作成者名</FormLabel>
+                      <FormLabel>試験問題作者名</FormLabel>
                       <Input
                         value={author}
                         onChange={(event) => setAuthor(event.target.value)}
@@ -827,6 +837,8 @@ export default function App() {
                     onChange={(event) => setRetryApiKey(event.target.value)}
                     placeholder="Gemini API Key"
                     focusBorderColor="brand.gold"
+                    type="password"
+                    autoComplete="new-password"
                   />
                 </FormControl>
                 <FormControl>
@@ -839,7 +851,7 @@ export default function App() {
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>科目名</FormLabel>
+                  <FormLabel>試験科目名</FormLabel>
                   <Input
                     value={retrySubject}
                     onChange={(event) => setRetrySubject(event.target.value)}
@@ -857,7 +869,7 @@ export default function App() {
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>作成者名</FormLabel>
+                  <FormLabel>試験問題作者名</FormLabel>
                   <Input
                     value={retryAuthor}
                     onChange={(event) => setRetryAuthor(event.target.value)}

@@ -167,12 +167,12 @@ project-root/
 * **プロトコル**: HTTPS (本番/VPS環境)
 
 ### ジョブ状態（status）一覧
-
 * `queued`: 受付済み（バックグラウンド開始待ち）
 * `generating_md`: Markdown 生成中
-* `done`: Markdown 生成完了
+* `generating_pdf`: PDF 生成中
+* `done`: PDF 生成完了
 * `failed`: 生成失敗
-* `failed_to_convert`: ダウンロード時のPDF変換に失敗
+* `failed_to_convert`: 生成時のPDF変換に失敗
 
 ### 1. 解説生成リクエスト (POST)
 
@@ -209,7 +209,7 @@ project-root/
 
 * **URL**: `GET /api/v1/pipeline/{job_id}/download`
 * **概要**: ジョブIDに基づいて生成状況を確認または成果物をダウンロードする。  
-  ダウンロード時に Markdown から PDF を生成して返す。
+  パイプライン内で Markdown → PDF まで生成済みの成果物を返す。
 
 **Responseパターン:**
 
@@ -325,8 +325,8 @@ uvicorn main:app --reload
 ### D. 入力変換ポリシー
 * 画像入力（JPEG/PNG）は **PDF化して Gemini に送信** する。
 * 生成物は `data/outputs/{job_id}/markdown` と `metadata.json` を保存する。
-* PDF はダウンロード時に生成し、`data/outputs/{job_id}/` に `explanation_name.pdf` で保存する。
-* PDF は生成後 1 週間保存する。
+* PDF はパイプライン内で生成し、`data/outputs/{job_id}/` に `explanation_name.pdf` で保存する。
+* PDF は生成後 **永久に保存**する。
 
 ---
 

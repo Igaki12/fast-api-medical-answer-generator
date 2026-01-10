@@ -150,7 +150,7 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 
 React 側は次のステートを持ちます（AGENTS.md準拠）。
 - `jobId: string`
-- `status: "queued" | "generating_md" | "done" | "failed" | "failed_to_convert" | "expired" | ...`
+- `status: "queued" | "generating_md" | "generating_pdf" | "done" | "failed" | "failed_to_convert" | "expired" | ...`
 - `progress?: number`（もしAPIが返すなら）
 - `message?: string` / `error?: string`
 
@@ -203,7 +203,7 @@ export async function getJobStatus(jobId: string) {
 - `setInterval` より `setTimeout` で逐次ポーリング（状態に応じて間隔調整しやすい）
 - 画面遷移/アンマウント時に `AbortController` で止める
 - 失敗時は `detail` / `error` を画面に出す（問い合わせに必要）
-- `failed_to_convert` または `generating_md` が30分以上続く場合は「もう一度試す」を表示して再送信できるようにする
+- `failed_to_convert`（生成時のPDF変換失敗）または `generating_md` が30分以上続く場合は「もう一度試す」を表示して再送信できるようにする
 
 ### 5.3 ダウンロード（PDF）
 例：`GET /api/v1/pipeline/{job_id}/download`  

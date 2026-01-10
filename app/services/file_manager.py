@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
-import time
 from pathlib import Path
 from typing import Optional
 
@@ -85,20 +84,6 @@ def find_pdf(job_id: str, filename: str) -> Optional[Path]:
     pdf_path = OUTPUTS_DIR / job_id / filename
     if pdf_path.exists():
         return pdf_path
-    return None
-
-
-def find_fresh_pdf(job_id: str, filename: str, max_age_days: int) -> Optional[Path]:
-    pdf_path = find_pdf(job_id, filename)
-    if not pdf_path:
-        return None
-    age_seconds = time.time() - pdf_path.stat().st_mtime
-    if age_seconds <= max_age_days * 86400:
-        return pdf_path
-    try:
-        pdf_path.unlink()
-    except Exception:
-        pass
     return None
 
 
