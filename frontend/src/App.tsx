@@ -23,6 +23,7 @@ import {
   SlideFade,
   Stack,
   Text,
+  useToast,
   VStack
 } from "@chakra-ui/react";
 import { ApiError, downloadResult, getJobStatus, startLegacyPipeline } from "./lib/api";
@@ -82,6 +83,12 @@ const pendingStatuses = [
   "running",
   "converting"
 ];
+
+const etaLabels: Record<string, string> = {
+  queued: "残り20分程度",
+  generating_md: "残り15分程度",
+  generating_pdf: "残り1分未満"
+};
 
 function loadJobs(): JobRecord[] {
   try {
@@ -178,8 +185,7 @@ export default function App() {
   const [explanationName, setExplanationName] = useState(defaults.explanationName ?? "");
   const [userEditedName, setUserEditedName] = useState(false);
   const [inputFile, setInputFile] = useState<File | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const toast = useToast();
   const [jobs, setJobs] = useState<JobRecord[]>(() => loadJobs());
   const [tipIndex, setTipIndex] = useState(0);
   const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
@@ -194,6 +200,10 @@ export default function App() {
   const [retryUserEditedName, setRetryUserEditedName] = useState(false);
   const [retryFile, setRetryFile] = useState<File | null>(null);
   const [isRetryOpen, setIsRetryOpen] = useState(false);
+  const [isNoticeOpen, setIsNoticeOpen] = useState(false);
+  const [noticeJobId, setNoticeJobId] = useState<string | null>(null);
+  const [searchJobId, setSearchJobId] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   const pollingRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -244,15 +254,24 @@ export default function App() {
     [jobs]
   );
 
+  const showToast = (title: string, status: "info" | "success" | "warning" | "error") => {
+    toast({
+      title,
+      status,
+      duration: 5000,
+      isClosable: true,
+      position: "top"
+    });
+  };
+
   const refreshPendingJobs = async () => {
-    setErrorMessage(null);
     const targets = jobs.filter((job) => pendingStatuses.includes(job.status));
     if (targets.length === 0) {
-      setStatusMessage("更新する待機中ジョブがありません。");
+      showToast("更新する待機中ジョブがありません。", "info");
       return;
     }
     setIsRefreshing(true);
-    setStatusMessage("ステータスを更新中...");
+    showToast("ステータスを更新中...", "info");
     const results = await Promise.all(
       targets.map(async (job) => {
         try {
@@ -265,7 +284,7 @@ export default function App() {
     );
     setJobs((prev) => mergeStatusResults(prev, results));
     setIsRefreshing(false);
-    setStatusMessage("ステータスを更新しました。");
+    showToast("ステータスを更新しました。", "success");
   };
 
   useEffect(() => {
@@ -316,11 +335,10 @@ export default function App() {
 
   const onSubmit = async () => {
     if (!inputFile || !canSubmit) {
-      setErrorMessage("必須項目を入力し、ファイルを選択してください。");
+      showToast("必須項目を入力し、ファイルを選択してください。", "warning");
       return;
     }
-    setErrorMessage(null);
-    setStatusMessage("ジョブを開始しています...");
+    showToast("ジョブを開始しています...", "info");
 
     try {
       const res = await startLegacyPipeline({
@@ -355,15 +373,15 @@ export default function App() {
         explanationName: explanationName.trim()
       });
       setJobs((prev) => [job, ...prev]);
-      setStatusMessage("ジョブを受付しました。完了までお待ちください。");
+      showToast("ジョブを受付しました。完了までお待ちください。", "success");
+      setNoticeJobId(res.job_id);
+      setIsNoticeOpen(true);
     } catch (error) {
-      setStatusMessage(null);
-      setErrorMessage(error instanceof Error ? error.message : "送信に失敗しました。");
+      showToast(error instanceof Error ? error.message : "送信に失敗しました。", "error");
     }
   };
 
   const handleDownload = async (jobId: string) => {
-    setErrorMessage(null);
     setDownloadingJobId(jobId);
     try {
       await downloadResult(jobId);
@@ -381,9 +399,9 @@ export default function App() {
               : job
           )
         );
-        setErrorMessage("PDF変換に失敗しました。再試行してください。");
+        showToast("PDF変換に失敗しました。再試行してください。", "error");
       } else {
-        setErrorMessage(error instanceof Error ? error.message : "ダウンロードに失敗しました。");
+        showToast(error instanceof Error ? error.message : "ダウンロードに失敗しました。", "error");
       }
     } finally {
       setDownloadingJobId(null);
@@ -410,13 +428,77 @@ export default function App() {
     setRetryFile(null);
   };
 
-  const onRetrySubmit = async () => {
-    if (!retryFile || !retryCanSubmit) {
-      setErrorMessage("必須項目を入力し、ファイルを選択してください。");
+  const handleCopyJobId = async () => {
+    if (!noticeJobId) return;
+    try {
+      await navigator.clipboard.writeText(noticeJobId);
+      showToast("job_id をコピーしました。", "success");
+    } catch {
+      showToast("job_id のコピーに失敗しました。", "error");
+    }
+  };
+
+  const closeNoticeModal = () => {
+    setIsNoticeOpen(false);
+    setNoticeJobId(null);
+  };
+
+  const handleSearchJob = async () => {
+    const trimmed = searchJobId.trim();
+    if (!trimmed) {
+      showToast("JOB_ID を入力してください。", "warning");
       return;
     }
-    setErrorMessage(null);
-    setStatusMessage("ジョブを開始しています...");
+    setIsSearching(true);
+    try {
+      const data = await getJobStatus(trimmed);
+      const now = new Date().toISOString();
+      setJobs((prev) => {
+        const existing = prev.find((job) => job.jobId === trimmed);
+        if (existing) {
+          return prev.map((job) =>
+            job.jobId === trimmed
+              ? {
+                  ...job,
+                  status: data.status ?? job.status,
+                  message: data.message,
+                  error: data.error,
+                  updatedAt: now
+                }
+              : job
+          );
+        }
+        return [
+          {
+            jobId: trimmed,
+            status: data.status ?? "queued",
+            explanationName: trimmed,
+            createdAt: now,
+            updatedAt: now,
+            message: data.message,
+            error: data.error
+          },
+          ...prev
+        ];
+      });
+      showToast("ジョブを追加しました。", "success");
+    } catch (error) {
+      if (error instanceof ApiError && [404, 410].includes(error.status)) {
+        showToast("該当するジョブが見つかりませんでした。", "error");
+      } else {
+        showToast(error instanceof Error ? error.message : "検索に失敗しました。", "error");
+      }
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const onRetrySubmit = async () => {
+    if (!retryFile || !retryCanSubmit) {
+      showToast("必須項目を入力し、ファイルを選択してください。", "warning");
+      return;
+    }
+    showToast("ジョブを開始しています...", "info");
 
     try {
       const res = await startLegacyPipeline({
@@ -452,11 +534,10 @@ export default function App() {
       });
 
       setJobs((prev) => [job, ...prev]);
-      setStatusMessage("ジョブを受付しました。完了までお待ちください。");
+      showToast("ジョブを受付しました。完了までお待ちください。", "success");
       closeRetryModal();
     } catch (error) {
-      setStatusMessage(null);
-      setErrorMessage(error instanceof Error ? error.message : "送信に失敗しました。");
+      showToast(error instanceof Error ? error.message : "送信に失敗しました。", "error");
     }
   };
 
@@ -609,16 +690,6 @@ export default function App() {
                     >
                       リクエストする
                     </Button>
-                    {statusMessage ? (
-                      <Text fontSize="sm" color="brand.muted">
-                        {statusMessage}
-                      </Text>
-                    ) : null}
-                    {errorMessage ? (
-                      <Text fontSize="sm" color="red.700">
-                        {errorMessage}
-                      </Text>
-                    ) : null}
                   </HStack>
                 </VStack>
               </GridItem>
@@ -690,6 +761,7 @@ export default function App() {
                     bg: "#EFE7DA",
                     color: "#6D5F4B"
                   };
+                  const etaLabel = etaLabels[job.status];
                   const createdAtMs = new Date(job.createdAt).getTime();
                   const isStalled =
                     job.status === "generating_md" &&
@@ -767,6 +839,16 @@ export default function App() {
                         <Text fontSize="xs" color="brand.muted">
                           作成: {formatDate(job.createdAt)} / 更新: {formatDate(job.updatedAt)}
                         </Text>
+                        {etaLabel ? (
+                          <HStack spacing={2} align="center">
+                            <Badge bg="brand.bg" color="brand.muted" borderRadius="full" px={3}>
+                              目安
+                            </Badge>
+                            <Text fontSize="xs" color="brand.muted">
+                              {etaLabel}
+                            </Text>
+                          </HStack>
+                        ) : null}
                         {job.message ? (
                           <Text fontSize="sm" color="brand.muted">
                             {job.message}
@@ -815,6 +897,42 @@ export default function App() {
                 })}
               </SimpleGrid>
             )}
+          </Box>
+
+          <Box
+            bg="whiteAlpha.900"
+            border="1px solid"
+            borderColor="brand.gold"
+            borderRadius="xl"
+            p={{ base: 4, md: 5 }}
+          >
+            <HStack justify="space-between" mb={3} flexWrap="wrap">
+              <Heading size="sm">ジョブを追加</Heading>
+              <Badge bg="brand.bg" color="brand.muted" borderRadius="full" px={3}>
+                ＋ 追加
+              </Badge>
+            </HStack>
+            <Text fontSize="sm" color="brand.muted" mb={3}>
+              job_id を入力すると、ジョブ一覧に追加してステータスを確認します。
+            </Text>
+            <HStack spacing={3} flexWrap="wrap">
+              <Input
+                value={searchJobId}
+                onChange={(event) => setSearchJobId(event.target.value)}
+                placeholder="JOB_ID を入力"
+                focusBorderColor="brand.gold"
+              />
+              <Button
+                size="sm"
+                bg="brand.gold"
+                color="brand.ink"
+                _hover={{ bg: "brand.goldDeep", color: "white" }}
+                onClick={handleSearchJob}
+                isDisabled={isSearching}
+              >
+                ＋ 追加
+              </Button>
+            </HStack>
           </Box>
         </VStack>
       </Container>
@@ -921,6 +1039,58 @@ export default function App() {
                 もう一度試す
               </Button>
             </HStack>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal isOpen={isNoticeOpen} onClose={closeNoticeModal} size="lg">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>リクエスト受付後のご案内</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4} align="stretch">
+              <Text fontSize="sm" color="brand.muted">
+                最大15〜20分程度の待ち時間が発生する場合があります。
+              </Text>
+              <Text fontSize="sm" color="brand.muted">
+                リクエスト情報は端末ブラウザ内に保存されるため、待ち時間中は自由に退出してかまいません。
+              </Text>
+              <Text fontSize="sm" color="brand.muted">
+                必要であれば job_id を控えておくと、後で検索できます。
+              </Text>
+              {noticeJobId ? (
+                <HStack spacing={3} flexWrap="wrap">
+                  <Badge bg="brand.bg" color="brand.muted" borderRadius="full" px={3}>
+                    job_id
+                  </Badge>
+                  <Text fontSize="sm" color="brand.ink">
+                    {noticeJobId}
+                  </Text>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    borderColor="brand.gold"
+                    color="brand.ink"
+                    _hover={{ bg: "brand.gold", color: "brand.ink" }}
+                    onClick={handleCopyJobId}
+                  >
+                    コピー
+                  </Button>
+                </HStack>
+              ) : null}
+              <Text fontSize="sm" color="brand.muted">
+                サイズが大きい場合や混雑時には、生成に失敗する可能性があります。
+              </Text>
+              <Text fontSize="sm" color="brand.muted">
+                節度を守った利用をお願いします。
+              </Text>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" onClick={closeNoticeModal}>
+              閉じる
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
