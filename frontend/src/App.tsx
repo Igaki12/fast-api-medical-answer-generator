@@ -271,7 +271,6 @@ export default function App() {
       return;
     }
     setIsRefreshing(true);
-    showToast("ステータスを更新中...", "info");
     const results = await Promise.all(
       targets.map(async (job) => {
         try {
@@ -338,7 +337,6 @@ export default function App() {
       showToast("必須項目を入力し、ファイルを選択してください。", "warning");
       return;
     }
-    showToast("ジョブを開始しています...", "info");
 
     try {
       const res = await startLegacyPipeline({
@@ -498,7 +496,6 @@ export default function App() {
       showToast("必須項目を入力し、ファイルを選択してください。", "warning");
       return;
     }
-    showToast("ジョブを開始しています...", "info");
 
     try {
       const res = await startLegacyPipeline({
