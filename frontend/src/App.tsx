@@ -667,10 +667,10 @@ export default function App() {
                   </SimpleGrid>
 
                   <FormControl>
-                    <FormLabel>問題ファイル（PDF/JPEG/PNG）</FormLabel>
+                    <FormLabel>問題ファイル（PDF）</FormLabel>
                     <Input
                       type="file"
-                      accept="application/pdf,image/jpeg,image/png"
+                      accept="application/pdf"
                       onChange={(event) => setInputFile(event.target.files?.[0] ?? null)}
                       focusBorderColor="brand.gold"
                     />
@@ -1006,10 +1006,10 @@ export default function App() {
                 </FormControl>
               </SimpleGrid>
               <FormControl>
-                <FormLabel>問題ファイル（PDF/JPEG/PNG）</FormLabel>
+                <FormLabel>問題ファイル（PDF）</FormLabel>
                 <Input
                   type="file"
-                  accept="application/pdf,image/jpeg,image/png"
+                  accept="application/pdf"
                   onChange={(event) => setRetryFile(event.target.files?.[0] ?? null)}
                   focusBorderColor="brand.gold"
                 />
