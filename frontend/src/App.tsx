@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   Container,
-  Divider,
   FormControl,
   FormLabel,
   Grid,
@@ -20,7 +19,6 @@ import {
   ModalHeader,
   ModalOverlay,
   SimpleGrid,
-  SlideFade,
   Stack,
   Text,
   useToast,
@@ -28,6 +26,7 @@ import {
 } from "@chakra-ui/react";
 import { ApiError, downloadResult, getJobStatus, startLegacyPipeline } from "./lib/api";
 import { keyframes } from "@emotion/react";
+import { CheckCircleIcon } from "@chakra-ui/icons";
 
 const STORAGE_KEY = "pipeline_jobs";
 const FORM_STORAGE_KEY = "pipeline_form_defaults";
@@ -46,20 +45,14 @@ type JobRecord = {
   error?: string;
 };
 
-const tips = [
-  "最大15分程度待つ可能性があります。",
-  "大きいファイルや多数の画像で失敗する可能性があります。",
-  "失敗時は分割して再実行すると成功する場合があります。"
-];
-
 const statusLabels: Record<string, string> = {
   accepted: "受付済み",
   queued: "受付済み",
-  generating_md: "Markdown 生成中",
-  generating_pdf: "PDF 生成中",
+  generating_md: "解答作成中",
+  generating_pdf: "PDF変換中",
   done: "完了",
   failed: "失敗",
-  failed_to_convert: "PDF変換失敗（Markdownのみ）",
+  failed_to_convert: "PDF変換失敗",
   expired: "期限切れ"
 };
 
@@ -187,9 +180,9 @@ export default function App() {
   const [inputFile, setInputFile] = useState<File | null>(null);
   const toast = useToast();
   const [jobs, setJobs] = useState<JobRecord[]>(() => loadJobs());
-  const [tipIndex, setTipIndex] = useState(0);
   const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isRefreshCooldown, setIsRefreshCooldown] = useState(false);
   const [retryJob, setRetryJob] = useState<JobRecord | null>(null);
   const [retryApiKey, setRetryApiKey] = useState("");
   const [retryYear, setRetryYear] = useState("");
@@ -205,6 +198,7 @@ export default function App() {
   const [searchJobId, setSearchJobId] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const pollingRef = useRef<number | null>(null);
+  const refreshCooldownRef = useRef<number | null>(null);
 
   useEffect(() => {
     saveJobs(jobs);
@@ -240,13 +234,6 @@ export default function App() {
     const base = [retryYear, retrySubject].filter(Boolean).join("_");
     setRetryExplanationName(`${base}_解答解説`);
   }, [retryYear, retrySubject, retryUserEditedName, isRetryOpen]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setTipIndex((prev) => (prev + 1) % tips.length);
-    }, 4200);
-    return () => window.clearTimeout(timer);
-  }, [tipIndex]);
 
   const pendingJobs = useMemo(
     () =>
@@ -285,6 +272,23 @@ export default function App() {
     setIsRefreshing(false);
     showToast("ステータスを更新しました。", "success");
   };
+
+  const handleRefreshClick = async () => {
+    if (isRefreshing || isRefreshCooldown) return;
+    setIsRefreshCooldown(true);
+    await refreshPendingJobs();
+    refreshCooldownRef.current = window.setTimeout(() => {
+      setIsRefreshCooldown(false);
+    }, 10000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (refreshCooldownRef.current) {
+        window.clearTimeout(refreshCooldownRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (pendingJobs.length === 0) return;
@@ -550,6 +554,12 @@ export default function App() {
     100% { border-radius: 50%; transform: scale(1); }
   `;
 
+  const noticeCheck = keyframes`
+    0% { opacity: 0; transform: scale(0.8); }
+    60% { opacity: 1; transform: scale(1.08); }
+    100% { opacity: 1; transform: scale(1); }
+  `;
+
   return (
     <Box minH="100vh" pb={{ base: 10, md: 16 }} position="relative" overflow="hidden">
       <Box
@@ -580,7 +590,7 @@ export default function App() {
           <Stack spacing={2} textAlign={{ base: "left", md: "center" }}>
             <Heading fontSize={{ base: "2xl", md: "4xl" }}>AI解説生成システム</Heading>
             <Text color="brand.muted" fontSize={{ base: "sm", md: "md" }}>
-              過去問PDFや画像から、AIが解説MarkdownとPDFを生成します。
+              過去問PDFから、AIが解答・解説PDFを作成します。
             </Text>
           </Stack>
 
@@ -693,24 +703,7 @@ export default function App() {
 
               <GridItem>
                 <VStack spacing={4} align="stretch">
-                  <Heading size="sm">TIPS</Heading>
-                  <Box
-                    bg="brand.bg"
-                    border="1px solid"
-                    borderColor="brand.gold"
-                    borderRadius="xl"
-                    p={4}
-                    minH="140px"
-                    display="flex"
-                    alignItems="center"
-                  >
-                    <SlideFade in key={tipIndex} offsetY="8px">
-                      <Text fontSize="sm" color="brand.ink">
-                        {tips[tipIndex]}
-                      </Text>
-                    </SlideFade>
-                  </Box>
-                  <Divider borderColor="brand.gold" />
+                  <Heading size="sm">補足</Heading>
                   <Box>
                     <Text fontSize="sm" color="brand.muted" mb={2}>
                       現在のジョブはブラウザに保存されます。別端末からは見えません。
@@ -733,8 +726,9 @@ export default function App() {
                 borderColor="brand.gold"
                 color="brand.ink"
                 _hover={{ bg: "brand.gold", color: "brand.ink" }}
-                onClick={refreshPendingJobs}
-                isDisabled={pendingJobs.length === 0 || isRefreshing}
+                onClick={handleRefreshClick}
+                isDisabled={pendingJobs.length === 0 || isRefreshing || isRefreshCooldown}
+                isLoading={isRefreshing || isRefreshCooldown}
               >
                 更新する
               </Button>
@@ -748,7 +742,7 @@ export default function App() {
                 textAlign="center"
                 color="brand.muted"
               >
-                まだジョブがありません。上のフォームからリクエストしてください。
+                まだジョブがありません。上のフォームから解答解説作成ジョブを依頼してみよう！
               </Box>
             ) : (
               <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={5}>
@@ -1047,6 +1041,20 @@ export default function App() {
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4} align="stretch">
+              <Box display="flex" justifyContent="center">
+                <Box
+                  w="56px"
+                  h="56px"
+                  borderRadius="full"
+                  bg="brand.bg"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  animation={`${noticeCheck} 0.8s ease-out`}
+                >
+                  <CheckCircleIcon w="30px" h="30px" color="brand.goldDeep" />
+                </Box>
+              </Box>
               <Text fontSize="sm" color="brand.muted">
                 最大15〜20分程度の待ち時間が発生する場合があります。
               </Text>
