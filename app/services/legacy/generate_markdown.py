@@ -11,7 +11,7 @@ from google.genai import types # type: ignore
 
 
 HTTP_TIMEOUT_MS = 15 * 60 * 1000
-MAX_RETRIES = 3
+MAX_RETRIES = 2
 MODEL_NAME = os.getenv("GEMINI_LEGACY_MODEL", "gemini-3-pro-preview")
 REST_API_VERSION = os.getenv("GEMINI_LEGACY_API_VERSION", "v1alpha")
 

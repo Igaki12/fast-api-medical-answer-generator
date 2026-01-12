@@ -26,7 +26,14 @@ import {
 } from "@chakra-ui/react";
 import { ApiError, downloadResult, getJobStatus, startLegacyPipeline } from "./lib/api";
 import { keyframes } from "@emotion/react";
-import { CheckCircleIcon } from "@chakra-ui/icons";
+import {
+  ArrowForwardIcon,
+  AttachmentIcon,
+  CheckIcon,
+  CopyIcon,
+  DownloadIcon,
+  RepeatIcon
+} from "@chakra-ui/icons";
 
 const STORAGE_KEY = "pipeline_jobs";
 const FORM_STORAGE_KEY = "pipeline_form_defaults";
@@ -678,12 +685,37 @@ export default function App() {
 
                   <FormControl>
                     <FormLabel>問題ファイル（PDF）</FormLabel>
-                    <Input
-                      type="file"
-                      accept="application/pdf"
-                      onChange={(event) => setInputFile(event.target.files?.[0] ?? null)}
-                      focusBorderColor="brand.gold"
-                    />
+                    <Box
+                      position="relative"
+                      border="1px dashed"
+                      borderColor="brand.gold"
+                      borderRadius="xl"
+                      bg="brand.bg"
+                      p={4}
+                      textAlign="center"
+                      cursor="pointer"
+                      _hover={{ bg: "rgba(201, 161, 74, 0.08)" }}
+                    >
+                      <VStack spacing={1}>
+                        <AttachmentIcon color="brand.goldDeep" />
+                        <Text fontSize="sm" color="brand.ink">
+                          クリックしてPDFを選択
+                        </Text>
+                        <Text fontSize="xs" color="brand.muted">
+                          {inputFile ? inputFile.name : "未選択"}
+                        </Text>
+                      </VStack>
+                      <Input
+                        type="file"
+                        accept="application/pdf"
+                        onChange={(event) => setInputFile(event.target.files?.[0] ?? null)}
+                        focusBorderColor="brand.gold"
+                        position="absolute"
+                        inset={0}
+                        opacity={0}
+                        cursor="pointer"
+                      />
+                    </Box>
                   </FormControl>
 
                   <HStack spacing={4} align="center" flexWrap="wrap">
@@ -694,6 +726,7 @@ export default function App() {
                       _hover={{ bg: "brand.goldDeep", color: "white" }}
                       onClick={onSubmit}
                       isDisabled={!canSubmit}
+                      leftIcon={<ArrowForwardIcon />}
                     >
                       リクエストする
                     </Button>
@@ -729,6 +762,7 @@ export default function App() {
                 onClick={handleRefreshClick}
                 isDisabled={pendingJobs.length === 0 || isRefreshing || isRefreshCooldown}
                 isLoading={isRefreshing || isRefreshCooldown}
+                leftIcon={<RepeatIcon />}
               >
                 更新する
               </Button>
@@ -820,9 +854,16 @@ export default function App() {
                       <VStack spacing={3} align="stretch" opacity={isDownloading ? 0.4 : 1}>
                         <HStack justify="space-between" flexWrap="wrap">
                           <Text fontWeight="600">{job.explanationName}</Text>
-                          <Badge bg={badgeStyle.bg} color={badgeStyle.color} borderRadius="full" px={3}>
-                            {label}
-                          </Badge>
+                          <HStack spacing={2} align="center">
+                            <Badge bg={badgeStyle.bg} color={badgeStyle.color} borderRadius="full" px={3}>
+                              {label}
+                            </Badge>
+                            {etaLabel ? (
+                              <Text fontSize="xs" color="brand.muted">
+                                {etaLabel}
+                              </Text>
+                            ) : null}
+                          </HStack>
                         </HStack>
                         <Text fontSize="sm" color="brand.muted">
                           job_id: {job.jobId}
@@ -830,16 +871,6 @@ export default function App() {
                         <Text fontSize="xs" color="brand.muted">
                           作成: {formatDate(job.createdAt)} / 更新: {formatDate(job.updatedAt)}
                         </Text>
-                        {etaLabel ? (
-                          <HStack spacing={2} align="center">
-                            <Badge bg="brand.bg" color="brand.muted" borderRadius="full" px={3}>
-                              目安
-                            </Badge>
-                            <Text fontSize="xs" color="brand.muted">
-                              {etaLabel}
-                            </Text>
-                          </HStack>
-                        ) : null}
                         {job.message ? (
                           <Text fontSize="sm" color="brand.muted">
                             {job.message}
@@ -859,6 +890,7 @@ export default function App() {
                               color="brand.ink"
                               _hover={{ bg: "brand.goldDeep", color: "white" }}
                               onClick={() => handleDownload(job.jobId)}
+                              leftIcon={<DownloadIcon />}
                             >
                               ダウンロードする
                             </Button>
@@ -1001,12 +1033,37 @@ export default function App() {
               </SimpleGrid>
               <FormControl>
                 <FormLabel>問題ファイル（PDF）</FormLabel>
-                <Input
-                  type="file"
-                  accept="application/pdf"
-                  onChange={(event) => setRetryFile(event.target.files?.[0] ?? null)}
-                  focusBorderColor="brand.gold"
-                />
+                <Box
+                  position="relative"
+                  border="1px dashed"
+                  borderColor="brand.gold"
+                  borderRadius="xl"
+                  bg="brand.bg"
+                  p={4}
+                  textAlign="center"
+                  cursor="pointer"
+                  _hover={{ bg: "rgba(201, 161, 74, 0.08)" }}
+                >
+                  <VStack spacing={1}>
+                    <AttachmentIcon color="brand.goldDeep" />
+                    <Text fontSize="sm" color="brand.ink">
+                      クリックしてPDFを選択
+                    </Text>
+                    <Text fontSize="xs" color="brand.muted">
+                      {retryFile ? retryFile.name : "未選択"}
+                    </Text>
+                  </VStack>
+                  <Input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(event) => setRetryFile(event.target.files?.[0] ?? null)}
+                    focusBorderColor="brand.gold"
+                    position="absolute"
+                    inset={0}
+                    opacity={0}
+                    cursor="pointer"
+                  />
+                </Box>
               </FormControl>
               {retryJob ? (
                 <Text fontSize="xs" color="brand.muted">
@@ -1052,7 +1109,7 @@ export default function App() {
                   justifyContent="center"
                   animation={`${noticeCheck} 0.8s ease-out`}
                 >
-                  <CheckCircleIcon w="30px" h="30px" color="brand.goldDeep" />
+                  <CheckIcon w="30px" h="30px" color="brand.goldDeep" />
                 </Box>
               </Box>
               <Text fontSize="sm" color="brand.muted">
@@ -1079,6 +1136,7 @@ export default function App() {
                     color="brand.ink"
                     _hover={{ bg: "brand.gold", color: "brand.ink" }}
                     onClick={handleCopyJobId}
+                    leftIcon={<CopyIcon />}
                   >
                     コピー
                   </Button>

@@ -190,7 +190,7 @@ project-root/
 | `university` | String | YES | 大学名 (例: 東京大学) |
 | `subject` | String | YES | 科目名 (例: 生化学) |
 | `author` | String | YES | 作成者名 (例: 佐藤先生) |
-| `input_file` | File | YES | 問題ファイル (PDF/JPEG/PNG) |
+| `input_file` | File | YES | 問題ファイル (PDF) |
 
 **Response:**
 
