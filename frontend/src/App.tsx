@@ -221,7 +221,8 @@ export default function App() {
       setExplanationName("");
       return;
     }
-    const base = [year, subject].filter(Boolean).join("_");
+    const yearLabel = year ? `${year}年度` : "";
+    const base = [yearLabel, subject].filter(Boolean).join("_");
     setExplanationName(`${base}_解答解説`);
   }, [year, subject, userEditedName]);
 
@@ -242,7 +243,8 @@ export default function App() {
       setRetryExplanationName("");
       return;
     }
-    const base = [retryYear, retrySubject].filter(Boolean).join("_");
+    const yearLabel = retryYear ? `${retryYear}年度` : "";
+    const base = [yearLabel, retrySubject].filter(Boolean).join("_");
     setRetryExplanationName(`${base}_解答解説`);
   }, [retryYear, retrySubject, retryUserEditedName, isRetryOpen]);
 
