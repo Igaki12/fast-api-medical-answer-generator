@@ -26,6 +26,11 @@ logger = logging.getLogger("medteria")
 
 app = FastAPI(title="AI解説生成システム API", version="0.2.1")
 
+MAX_TEXT_LENGTH = 100
+MAX_FILE_SIZE = 20 * 1024 * 1024
+ALLOWED_PDF_MIME_TYPES = {"application/pdf"}
+ALLOWED_PDF_EXTENSIONS = {".pdf"}
+
 
 @app.on_event("startup")
 def startup() -> None:
@@ -43,6 +48,62 @@ def _save_upload(job_id: str, upload: UploadFile) -> Path:
                 break
             handle.write(chunk)
     return destination
+
+
+def _validate_pipeline_inputs(
+    input_file: UploadFile,
+    explanation_name: str,
+    university: str,
+    year: str,
+    subject: str,
+    author: str,
+) -> None:
+    errors = []
+
+    def add_error(field: str, message: str, type_name: str) -> None:
+        errors.append({"loc": ["body", field], "msg": message, "type": type_name})
+
+    def validate_text(field: str, value: str) -> None:
+        if not value or not value.strip():
+            add_error(field, "field required", "value_error.missing")
+            return
+        if len(value.strip()) > MAX_TEXT_LENGTH:
+            add_error(field, f"must be <= {MAX_TEXT_LENGTH} characters", "value_error.any_str.max_length")
+
+    validate_text("explanation_name", explanation_name)
+    validate_text("university", university)
+    validate_text("year", year)
+    validate_text("subject", subject)
+    validate_text("author", author)
+
+    year_value = year.strip() if year else ""
+    if year_value and (not year_value.isdigit() or not (1 <= len(year_value) <= 4)):
+        add_error("year", "must be 1-4 digits", "value_error.year_format")
+
+    filename = Path(input_file.filename or "").name
+    if not filename:
+        add_error("input_file", "filename is required", "value_error.missing")
+    else:
+        suffix = Path(filename).suffix.lower()
+        if suffix not in ALLOWED_PDF_EXTENSIONS:
+            add_error("input_file", "file extension must be .pdf", "value_error.file_extension")
+
+    content_type = (input_file.content_type or "").lower()
+    if content_type not in ALLOWED_PDF_MIME_TYPES:
+        add_error("input_file", "content type must be application/pdf", "value_error.file_content_type")
+
+    try:
+        upload_file = input_file.file
+        upload_file.seek(0, 2)
+        size = upload_file.tell()
+        upload_file.seek(0)
+        if size > MAX_FILE_SIZE:
+            add_error("input_file", "file size must be <= 20MB", "value_error.file_size")
+    except Exception:
+        add_error("input_file", "failed to validate file size", "value_error.file_size")
+
+    if errors:
+        raise HTTPException(status_code=422, detail=errors)
 
 
 def _run_pipeline_job(
@@ -87,8 +148,14 @@ def pipeline_start(
     author: str = Form(...),
     _auth: str = Depends(require_basic_auth),
 ) -> GenerateResponse:
-    if not input_file.filename:
-        raise HTTPException(status_code=400, detail="filename is required")
+    _validate_pipeline_inputs(
+        input_file=input_file,
+        explanation_name=explanation_name,
+        university=university,
+        year=year,
+        subject=subject,
+        author=author,
+    )
 
     job_id = f"pipeline-{uuid4()}"
     file_manager.write_status(job_id, "queued")

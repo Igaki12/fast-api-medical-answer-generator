@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import {
   Badge,
   Box,
@@ -32,6 +32,7 @@ import {
   CheckIcon,
   CopyIcon,
   DownloadIcon,
+  EditIcon,
   RepeatIcon
 } from "@chakra-ui/icons";
 
@@ -83,6 +84,9 @@ const pendingStatuses = [
   "running",
   "converting"
 ];
+
+const MAX_TEXT_LENGTH = 100;
+const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 const etaLabels: Record<string, string> = {
   queued: "残り20分程度",
@@ -258,6 +262,45 @@ export default function App() {
     });
   };
 
+  const validateTextInputs = (values: {
+    explanationName: string;
+    year: string;
+    subject: string;
+    university: string;
+    author: string;
+  }) => {
+    if (!/^\d{1,4}$/.test(values.year.trim())) {
+      showToast("年度は1〜4桁の数字で入力してください。", "warning");
+      return false;
+    }
+    const overLimit = Object.entries(values).find(
+      ([key, value]) => key !== "year" && value.trim().length > MAX_TEXT_LENGTH
+    );
+    if (overLimit) {
+      showToast("各項目は100文字以内で入力してください。", "warning");
+      return false;
+    }
+    return true;
+  };
+
+  const handleFileChange = (
+    event: ChangeEvent<HTMLInputElement>,
+    setFile: (file: File | null) => void
+  ) => {
+    const file = event.target.files?.[0] ?? null;
+    if (!file) {
+      setFile(null);
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showToast("ファイルサイズは20MB以下にしてください。", "warning");
+      event.target.value = "";
+      setFile(null);
+      return;
+    }
+    setFile(file);
+  };
+
   const refreshPendingJobs = async () => {
     const targets = jobs.filter((job) => pendingStatuses.includes(job.status));
     if (targets.length === 0) {
@@ -346,6 +389,17 @@ export default function App() {
   const onSubmit = async () => {
     if (!inputFile || !canSubmit) {
       showToast("必須項目を入力し、ファイルを選択してください。", "warning");
+      return;
+    }
+    if (
+      !validateTextInputs({
+        explanationName,
+        year,
+        subject,
+        university,
+        author
+      })
+    ) {
       return;
     }
 
@@ -507,6 +561,17 @@ export default function App() {
       showToast("必須項目を入力し、ファイルを選択してください。", "warning");
       return;
     }
+    if (
+      !validateTextInputs({
+        explanationName: retryExplanationName,
+        year: retryYear,
+        subject: retrySubject,
+        university: retryUniversity,
+        author: retryAuthor
+      })
+    ) {
+      return;
+    }
 
     try {
       const res = await startLegacyPipeline({
@@ -568,7 +633,7 @@ export default function App() {
   `;
 
   return (
-    <Box minH="100vh" pb={{ base: 10, md: 16 }} position="relative" overflow="hidden">
+    <Box minH="100dvh" pb={{ base: 10, md: 16 }} position="relative" overflow="hidden">
       <Box
         position="absolute"
         top="-120px"
@@ -595,7 +660,10 @@ export default function App() {
       <Container maxW="6xl" pt={{ base: 10, md: 14 }}>
         <VStack spacing={{ base: 8, md: 12 }} align="stretch">
           <Stack spacing={2} textAlign={{ base: "left", md: "center" }}>
-            <Heading fontSize={{ base: "2xl", md: "4xl" }}>AI解説生成システム</Heading>
+            <HStack justify={{ base: "flex-start", md: "center" }} spacing={3}>
+              <EditIcon color="brand.goldDeep" fontSize={{ base: "2xl", md: "4xl" }} />
+              <Heading fontSize={{ base: "2xl", md: "4xl" }}>AI解説生成システム</Heading>
+            </HStack>
             <Text color="brand.muted" fontSize={{ base: "sm", md: "md" }}>
               過去問PDFから、AIが解答・解説PDFを作成します。
             </Text>
@@ -637,10 +705,18 @@ export default function App() {
                       <FormLabel>年度</FormLabel>
                       <Input
                         value={year}
-                        onChange={(event) => setYear(event.target.value)}
+                        onChange={(event) =>
+                          setYear(event.target.value.replace(/\D/g, "").slice(0, 4))
+                        }
                         placeholder="2024"
+                        inputMode="numeric"
+                        pattern="\\d{1,4}"
+                        maxLength={4}
                         focusBorderColor="brand.gold"
                       />
+                      <Text fontSize="xs" color="brand.muted" mt={1}>
+                        1〜4桁の数字
+                      </Text>
                     </FormControl>
                     <FormControl>
                       <FormLabel>試験科目名</FormLabel>
@@ -648,8 +724,16 @@ export default function App() {
                         value={subject}
                         onChange={(event) => setSubject(event.target.value)}
                         placeholder="生化学"
+                        maxLength={MAX_TEXT_LENGTH}
                         focusBorderColor="brand.gold"
                       />
+                      <Text
+                        fontSize="xs"
+                        color={subject.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
+                        mt={1}
+                      >
+                        {subject.length}/{MAX_TEXT_LENGTH}
+                      </Text>
                     </FormControl>
                     <FormControl>
                       <FormLabel>大学名</FormLabel>
@@ -657,8 +741,16 @@ export default function App() {
                         value={university}
                         onChange={(event) => setUniversity(event.target.value)}
                         placeholder="東京大学"
+                        maxLength={MAX_TEXT_LENGTH}
                         focusBorderColor="brand.gold"
                       />
+                      <Text
+                        fontSize="xs"
+                        color={university.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
+                        mt={1}
+                      >
+                        {university.length}/{MAX_TEXT_LENGTH}
+                      </Text>
                     </FormControl>
                     <FormControl>
                       <FormLabel>試験問題作者名</FormLabel>
@@ -666,8 +758,16 @@ export default function App() {
                         value={author}
                         onChange={(event) => setAuthor(event.target.value)}
                         placeholder="佐藤先生"
+                        maxLength={MAX_TEXT_LENGTH}
                         focusBorderColor="brand.gold"
                       />
+                      <Text
+                        fontSize="xs"
+                        color={author.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
+                        mt={1}
+                      >
+                        {author.length}/{MAX_TEXT_LENGTH}
+                      </Text>
                     </FormControl>
                     <FormControl>
                       <FormLabel>解説タイトル</FormLabel>
@@ -678,8 +778,16 @@ export default function App() {
                           setUserEditedName(true);
                         }}
                         placeholder="2024_生化学_解答解説"
+                        maxLength={MAX_TEXT_LENGTH}
                         focusBorderColor="brand.gold"
                       />
+                      <Text
+                        fontSize="xs"
+                        color={explanationName.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
+                        mt={1}
+                      >
+                        {explanationName.length}/{MAX_TEXT_LENGTH}
+                      </Text>
                     </FormControl>
                   </SimpleGrid>
 
@@ -696,7 +804,7 @@ export default function App() {
                       cursor="pointer"
                       _hover={{ bg: "rgba(201, 161, 74, 0.08)" }}
                     >
-                      <VStack spacing={1}>
+                      <VStack spacing={1} pointerEvents="none">
                         <AttachmentIcon color="brand.goldDeep" />
                         <Text fontSize="sm" color="brand.ink">
                           クリックしてPDFを選択
@@ -708,11 +816,14 @@ export default function App() {
                       <Input
                         type="file"
                         accept="application/pdf"
-                        onChange={(event) => setInputFile(event.target.files?.[0] ?? null)}
+                        onChange={(event) => handleFileChange(event, setInputFile)}
                         focusBorderColor="brand.gold"
                         position="absolute"
                         inset={0}
                         opacity={0}
+                        w="100%"
+                        h="100%"
+                        m={0}
                         cursor="pointer"
                       />
                     </Box>
@@ -986,10 +1097,18 @@ export default function App() {
                   <FormLabel>年度</FormLabel>
                   <Input
                     value={retryYear}
-                    onChange={(event) => setRetryYear(event.target.value)}
+                    onChange={(event) =>
+                      setRetryYear(event.target.value.replace(/\D/g, "").slice(0, 4))
+                    }
                     placeholder="2024"
+                    inputMode="numeric"
+                    pattern="\\d{1,4}"
+                    maxLength={4}
                     focusBorderColor="brand.gold"
                   />
+                  <Text fontSize="xs" color="brand.muted" mt={1}>
+                    1〜4桁の数字
+                  </Text>
                 </FormControl>
                 <FormControl>
                   <FormLabel>試験科目名</FormLabel>
@@ -997,8 +1116,16 @@ export default function App() {
                     value={retrySubject}
                     onChange={(event) => setRetrySubject(event.target.value)}
                     placeholder="生化学"
+                    maxLength={MAX_TEXT_LENGTH}
                     focusBorderColor="brand.gold"
                   />
+                  <Text
+                    fontSize="xs"
+                    color={retrySubject.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
+                    mt={1}
+                  >
+                    {retrySubject.length}/{MAX_TEXT_LENGTH}
+                  </Text>
                 </FormControl>
                 <FormControl>
                   <FormLabel>大学名</FormLabel>
@@ -1006,8 +1133,16 @@ export default function App() {
                     value={retryUniversity}
                     onChange={(event) => setRetryUniversity(event.target.value)}
                     placeholder="東京大学"
+                    maxLength={MAX_TEXT_LENGTH}
                     focusBorderColor="brand.gold"
                   />
+                  <Text
+                    fontSize="xs"
+                    color={retryUniversity.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
+                    mt={1}
+                  >
+                    {retryUniversity.length}/{MAX_TEXT_LENGTH}
+                  </Text>
                 </FormControl>
                 <FormControl>
                   <FormLabel>試験問題作者名</FormLabel>
@@ -1015,8 +1150,16 @@ export default function App() {
                     value={retryAuthor}
                     onChange={(event) => setRetryAuthor(event.target.value)}
                     placeholder="佐藤先生"
+                    maxLength={MAX_TEXT_LENGTH}
                     focusBorderColor="brand.gold"
                   />
+                  <Text
+                    fontSize="xs"
+                    color={retryAuthor.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
+                    mt={1}
+                  >
+                    {retryAuthor.length}/{MAX_TEXT_LENGTH}
+                  </Text>
                 </FormControl>
                 <FormControl>
                   <FormLabel>解説タイトル</FormLabel>
@@ -1027,8 +1170,18 @@ export default function App() {
                       setRetryUserEditedName(true);
                     }}
                     placeholder="2024_生化学_解答解説"
+                    maxLength={MAX_TEXT_LENGTH}
                     focusBorderColor="brand.gold"
                   />
+                  <Text
+                    fontSize="xs"
+                    color={
+                      retryExplanationName.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"
+                    }
+                    mt={1}
+                  >
+                    {retryExplanationName.length}/{MAX_TEXT_LENGTH}
+                  </Text>
                 </FormControl>
               </SimpleGrid>
               <FormControl>
@@ -1044,7 +1197,7 @@ export default function App() {
                   cursor="pointer"
                   _hover={{ bg: "rgba(201, 161, 74, 0.08)" }}
                 >
-                  <VStack spacing={1}>
+                  <VStack spacing={1} pointerEvents="none">
                     <AttachmentIcon color="brand.goldDeep" />
                     <Text fontSize="sm" color="brand.ink">
                       クリックしてPDFを選択
@@ -1056,11 +1209,14 @@ export default function App() {
                   <Input
                     type="file"
                     accept="application/pdf"
-                    onChange={(event) => setRetryFile(event.target.files?.[0] ?? null)}
+                    onChange={(event) => handleFileChange(event, setRetryFile)}
                     focusBorderColor="brand.gold"
                     position="absolute"
                     inset={0}
                     opacity={0}
+                    w="100%"
+                    h="100%"
+                    m={0}
                     cursor="pointer"
                   />
                 </Box>

@@ -185,12 +185,12 @@ project-root/
 | フィールド名 | 型 | 必須 | 説明 |
 | --- | --- | --- | --- |
 | `api_key` | String | NO | Gemini API Key (未指定時は環境変数フォールバック) |
-| `explanation_name` | String | YES | 生成する解説のタイトル (例: 2025年度_東京大学生化学_解答解説) |
-| `year` | String | YES | 年度 (例: 2024) |
+| `explanation_name` | String | YES | 生成する解説のタイトル (例: 2025年度_東京大学生化学_解答解説, 100文字以内) |
+| `year` | String | YES | 年度 (1〜4桁の数字, 例: 2024) |
 | `university` | String | YES | 大学名 (例: 東京大学) |
 | `subject` | String | YES | 科目名 (例: 生化学) |
 | `author` | String | YES | 作成者名 (例: 佐藤先生) |
-| `input_file` | File | YES | 問題ファイル (PDF) |
+| `input_file` | File | YES | 問題ファイル (PDF, 20MBまで) |
 
 **Response:**
 
@@ -204,6 +204,11 @@ project-root/
 }
 
 ```
+
+**入力チェック（サーバー側）**
+- `explanation_name` / `university` / `subject` / `author`: 100文字以内
+- `year`: 1〜4桁の数字
+- `input_file`: `application/pdf` のみ、拡張子 `.pdf`、20MB以下
 
 ### 2. 解説ダウンロード (GET)
 
