@@ -1055,7 +1055,7 @@ export default function App() {
               <Input
                 value={searchJobId}
                 onChange={(event) => setSearchJobId(event.target.value)}
-                placeholder="JOB_ID を入力"
+                placeholder="「pipeline-」から始まるJOB_ID を入力"
                 focusBorderColor="brand.gold"
               />
               <Button
@@ -1066,7 +1066,7 @@ export default function App() {
                 onClick={handleSearchJob}
                 isDisabled={isSearching}
               >
-                ＋ 追加
+                ＋ ジョブを検索して追加
               </Button>
             </HStack>
           </Box>

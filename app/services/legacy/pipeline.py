@@ -71,9 +71,12 @@ def prepare_download_pdf(job_id: str) -> Path:
 
 
 def _build_attribution_text(university: str, year: str, subject: str, author: str) -> str:
+    year_label = (year or "").strip()
+    if year_label:
+        year_label = f"{year_label}年度"
     parts = [
         (university or "").strip() or "不明",
-        (year or "").strip() or "不明",
+        year_label or "不明",
         (subject or "").strip() or "不明",
         (author or "").strip() or "不明",
     ]
