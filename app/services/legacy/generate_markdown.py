@@ -10,7 +10,7 @@ from google import genai # type: ignore
 from google.genai import types # type: ignore
 
 
-HTTP_TIMEOUT_MS = 15 * 60 * 1000
+HTTP_TIMEOUT_MS = 25 * 60 * 1000
 MAX_RETRIES = 2
 MODEL_NAME = os.getenv("GEMINI_LEGACY_MODEL", "gemini-3-pro-preview")
 REST_API_VERSION = os.getenv("GEMINI_LEGACY_API_VERSION", "v1alpha")
@@ -72,7 +72,7 @@ def generate_markdown_from_input(
                     mime_type="application/pdf",
                     data=pdf_bytes,
                 ),
-                media_resolution={"level": "media_resolution_high"},
+                # media_resolution={"level": "media_resolution_high"},
             ),
             types.Part(text=prompt),
         ],
