@@ -456,11 +456,11 @@ export default function App() {
           prev.map((job) =>
             job.jobId === jobId
               ? {
-                  ...job,
-                  status: "failed_to_convert",
-                  updatedAt: new Date().toISOString(),
-                  error: "PDF変換に失敗しました。再試行してください。"
-                }
+                ...job,
+                status: "failed_to_convert",
+                updatedAt: new Date().toISOString(),
+                error: "PDF変換に失敗しました。再試行してください。"
+              }
               : job
           )
         );
@@ -524,12 +524,12 @@ export default function App() {
           return prev.map((job) =>
             job.jobId === trimmed
               ? {
-                  ...job,
-                  status: data.status ?? job.status,
-                  message: data.message,
-                  error: data.error,
-                  updatedAt: now
-                }
+                ...job,
+                status: data.status ?? job.status,
+                message: data.message,
+                error: data.error,
+                updatedAt: now
+              }
               : job
           );
         }
@@ -638,784 +638,794 @@ export default function App() {
     <Box minH="100dvh" pb={{ base: 10, md: 16 }} position="relative" overflow="hidden">
       {/* 複数の線形グラデーションを重ねた背景レイヤー */}
       <Box
-      position="absolute"
-      inset={0}
-      bgGradient="linear(to-br, rgba(201, 161, 74, 0.03), rgba(139, 108, 47, 0.08), rgba(201, 161, 74, 0.05))"
-      zIndex={0}
+        position="absolute"
+        inset={0}
+        bgGradient="linear(to-br, rgba(201, 161, 74, 0.03), rgba(139, 108, 47, 0.08), rgba(201, 161, 74, 0.05))"
+        zIndex={0}
       />
       <Box
-      position="absolute"
-      inset={0}
-      bgGradient="linear(135deg, transparent 0%, rgba(201, 161, 74, 0.06) 40%, transparent 80%)"
-      zIndex={0}
+        position="absolute"
+        inset={0}
+        bgGradient="linear(135deg, transparent 0%, rgba(201, 161, 74, 0.06) 40%, transparent 80%)"
+        zIndex={0}
       />
       <Box
-      position="absolute"
-      inset={0}
-      bgGradient="linear(to-tr, rgba(139, 108, 47, 0.04), transparent, rgba(201, 161, 74, 0.07))"
-      zIndex={0}
+        position="absolute"
+        inset={0}
+        bgGradient="linear(to-tr, rgba(139, 108, 47, 0.04), transparent, rgba(201, 161, 74, 0.07))"
+        zIndex={0}
       />
 
       {/* 大きな装飾模様 */}
       <Box
-      position="absolute"
-      top="-120px"
-      right="-120px"
-      w="320px"
-      h="320px"
-      bgGradient="radial(circle, rgba(201, 161, 74, 0.16), rgba(139, 108, 47, 0.08))"
-      filter="blur(14px)"
-      borderRadius="50%"
-      zIndex={0}
+        position="absolute"
+        top="-120px"
+        right="-120px"
+        w="320px"
+        h="320px"
+        bgGradient="radial(circle, rgba(201, 161, 74, 0.16), rgba(139, 108, 47, 0.08))"
+        filter="blur(14px)"
+        borderRadius="50%"
+        zIndex={0}
       />
       <Box
-      position="absolute"
-      bottom="-160px"
-      left="-120px"
-      w="360px"
-      h="360px"
-      bgGradient="radial(circle, rgba(139, 108, 47, 0.12), rgba(201, 161, 74, 0.06))"
-      filter="blur(20px)"
-      borderRadius="45%"
-      zIndex={0}
+        position="absolute"
+        bottom="-160px"
+        left="-120px"
+        w="360px"
+        h="360px"
+        bgGradient="radial(circle, rgba(139, 108, 47, 0.12), rgba(201, 161, 74, 0.06))"
+        filter="blur(20px)"
+        borderRadius="45%"
+        zIndex={0}
       />
 
       {/* 追加の中型装飾模様 */}
       <Box
-      position="absolute"
-      top="30%"
-      left="10%"
-      w="220px"
-      h="220px"
-      bgGradient="radial(circle, rgba(201, 161, 74, 0.10), transparent)"
-      filter="blur(16px)"
-      borderRadius="40%"
-      zIndex={0}
+        position="absolute"
+        top="30%"
+        left="10%"
+        w="220px"
+        h="220px"
+        bgGradient="radial(circle, rgba(201, 161, 74, 0.10), transparent)"
+        filter="blur(16px)"
+        borderRadius="40%"
+        zIndex={0}
       />
       <Box
-      position="absolute"
-      top="60%"
-      right="15%"
-      w="180px"
-      h="180px"
-      bgGradient="radial(circle, rgba(139, 108, 47, 0.08), transparent)"
-      filter="blur(12px)"
-      borderRadius="35%"
-      zIndex={0}
+        position="absolute"
+        top="60%"
+        right="15%"
+        w="180px"
+        h="180px"
+        bgGradient="radial(circle, rgba(139, 108, 47, 0.08), transparent)"
+        filter="blur(12px)"
+        borderRadius="35%"
+        zIndex={0}
       />
 
       {/* 小さな装飾模様（散りばめる） */}
       <Box
-      position="absolute"
-      top="15%"
-      right="25%"
-      w="100px"
-      h="100px"
-      bgGradient="radial(circle, rgba(201, 161, 74, 0.14), transparent)"
-      filter="blur(8px)"
-      borderRadius="50%"
-      zIndex={0}
+        position="absolute"
+        top="15%"
+        right="25%"
+        w="100px"
+        h="100px"
+        bgGradient="radial(circle, rgba(201, 161, 74, 0.14), transparent)"
+        filter="blur(8px)"
+        borderRadius="50%"
+        zIndex={0}
       />
       <Box
-      position="absolute"
-      bottom="25%"
-      left="20%"
-      w="120px"
-      h="120px"
-      bgGradient="radial(circle, rgba(139, 108, 47, 0.10), transparent)"
-      filter="blur(10px)"
-      borderRadius="50%"
-      zIndex={0}
+        position="absolute"
+        bottom="25%"
+        left="20%"
+        w="120px"
+        h="120px"
+        bgGradient="radial(circle, rgba(139, 108, 47, 0.10), transparent)"
+        filter="blur(10px)"
+        borderRadius="50%"
+        zIndex={0}
       />
       <Box
-      position="absolute"
-      top="45%"
-      right="8%"
-      w="80px"
-      h="80px"
-      bgGradient="radial(circle, rgba(201, 161, 74, 0.12), transparent)"
-      filter="blur(6px)"
-      borderRadius="50%"
-      zIndex={0}
+        position="absolute"
+        top="45%"
+        right="8%"
+        w="80px"
+        h="80px"
+        bgGradient="radial(circle, rgba(201, 161, 74, 0.12), transparent)"
+        filter="blur(6px)"
+        borderRadius="50%"
+        zIndex={0}
       />
       <Box
-      position="absolute"
-      bottom="10%"
-      right="30%"
-      w="90px"
-      h="90px"
-      bgGradient="radial(circle, rgba(139, 108, 47, 0.09), transparent)"
-      filter="blur(7px)"
-      borderRadius="50%"
-      zIndex={0}
+        position="absolute"
+        bottom="10%"
+        right="30%"
+        w="90px"
+        h="90px"
+        bgGradient="radial(circle, rgba(139, 108, 47, 0.09), transparent)"
+        filter="blur(7px)"
+        borderRadius="50%"
+        zIndex={0}
       />
       <Box
-      position="absolute"
-      top="70%"
-      left="5%"
-      w="70px"
-      h="70px"
-      bgGradient="radial(circle, rgba(201, 161, 74, 0.11), transparent)"
-      filter="blur(5px)"
-      borderRadius="50%"
-      zIndex={0}
+        position="absolute"
+        top="70%"
+        left="5%"
+        w="70px"
+        h="70px"
+        bgGradient="radial(circle, rgba(201, 161, 74, 0.11), transparent)"
+        filter="blur(5px)"
+        borderRadius="50%"
+        zIndex={0}
       />
 
       <Container maxW="6xl" pt={{ base: 10, md: 14 }} position="relative" zIndex={1}>
-      <VStack spacing={{ base: 8, md: 12 }} align="stretch">
-        <Stack spacing={2} textAlign={{ base: "left", md: "center" }}>
-        <HStack justify={{ base: "flex-start", md: "center" }} spacing={3}>
-          <EditIcon color="brand.goldDeep" fontSize={{ base: "2xl", md: "4xl" }} />
-          <Heading fontSize={{ base: "2xl", md: "4xl" }}>AI解説生成システム</Heading>
-        </HStack>
-        <Text color="brand.muted" fontSize={{ base: "sm", md: "md" }}>
-          過去問PDFから、AIが解答・解説PDFを作成します。
-        </Text>
-        </Stack>
-
-        <Box
-        bg="whiteAlpha.900"
-        border="1px solid"
-        borderColor="brand.gold"
-        borderRadius="2xl"
-        boxShadow="0 20px 40px rgba(34, 21, 8, 0.08)"
-        p={{ base: 6, md: 8 }}
-        >
-        <Grid templateColumns={{ base: "1fr", lg: "1.2fr 0.8fr" }} gap={8}>
-          <GridItem>
-          <VStack spacing={6} align="stretch">
-            <Box>
-            <Heading size="md" mb={2}>
-              新しいリクエスト
-            </Heading>
-            <Text color="brand.muted" fontSize="sm">
-              生成AIは誤答や不足が含まれる可能性があります。最終判断は必ず担当者が行ってください。
-            </Text>
-            </Box>
-
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-            <FormControl>
-              <FormLabel>APIキー（任意）</FormLabel>
-              <Input
-              value={apiKey}
-              onChange={(event) => setApiKey(event.target.value)}
-              placeholder="Gemini API Key"
-              type="password"
-              autoComplete="new-password"
-              focusBorderColor="brand.gold"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>年度</FormLabel>
-              <Input
-              value={year}
-              onChange={(event) =>
-                setYear(event.target.value.replace(/\D/g, "").slice(0, 4))
-              }
-              placeholder="2024"
-              inputMode="numeric"
-              pattern="\\d{1,4}"
-              maxLength={4}
-              focusBorderColor="brand.gold"
-              />
-              <Text fontSize="xs" color="brand.muted" mt={1}>
-              1〜4桁の数字
-              </Text>
-            </FormControl>
-            <FormControl>
-              <FormLabel>試験科目名</FormLabel>
-              <Input
-              value={subject}
-              onChange={(event) => setSubject(event.target.value)}
-              placeholder="生化学"
-              maxLength={MAX_TEXT_LENGTH}
-              focusBorderColor="brand.gold"
-              />
-              <Text
-              fontSize="xs"
-              color={subject.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
-              mt={1}
-              >
-              {subject.length}/{MAX_TEXT_LENGTH}
-              </Text>
-            </FormControl>
-            <FormControl>
-              <FormLabel>大学名</FormLabel>
-              <Input
-              value={university}
-              onChange={(event) => setUniversity(event.target.value)}
-              placeholder="東京大学"
-              maxLength={MAX_TEXT_LENGTH}
-              focusBorderColor="brand.gold"
-              />
-              <Text
-              fontSize="xs"
-              color={university.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
-              mt={1}
-              >
-              {university.length}/{MAX_TEXT_LENGTH}
-              </Text>
-            </FormControl>
-            <FormControl>
-              <FormLabel>試験問題作者名</FormLabel>
-              <Input
-              value={author}
-              onChange={(event) => setAuthor(event.target.value)}
-              placeholder="佐藤先生"
-              maxLength={MAX_TEXT_LENGTH}
-              focusBorderColor="brand.gold"
-              />
-              <Text
-              fontSize="xs"
-              color={author.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
-              mt={1}
-              >
-              {author.length}/{MAX_TEXT_LENGTH}
-              </Text>
-            </FormControl>
-            <FormControl>
-              <FormLabel>解説タイトル</FormLabel>
-              <Input
-              value={explanationName}
-              onChange={(event) => {
-                setExplanationName(event.target.value);
-                setUserEditedName(true);
-              }}
-              placeholder="2024_生化学_解答解説"
-              maxLength={MAX_TEXT_LENGTH}
-              focusBorderColor="brand.gold"
-              />
-              <Text
-              fontSize="xs"
-              color={explanationName.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
-              mt={1}
-              >
-              {explanationName.length}/{MAX_TEXT_LENGTH}
-              </Text>
-            </FormControl>
-            </SimpleGrid>
-
-            <FormControl>
-            <FormLabel>問題ファイル（PDF）</FormLabel>
-            <Box
-              position="relative"
-              border="1px dashed"
-              borderColor="brand.gold"
-              borderRadius="xl"
-              bg="brand.bg"
-              p={4}
-              textAlign="center"
-              cursor="pointer"
-              _hover={{ bg: "rgba(201, 161, 74, 0.08)" }}
-            >
-              <VStack spacing={1} pointerEvents="none">
-              <AttachmentIcon color="brand.goldDeep" />
-              <Text fontSize="sm" color="brand.ink">
-                クリックしてPDFを選択
-              </Text>
-              <Text fontSize="xs" color="brand.muted">
-                {inputFile ? inputFile.name : "未選択"}
-              </Text>
-              </VStack>
-              <Input
-              type="file"
-              accept="application/pdf"
-              onChange={(event) => handleFileChange(event, setInputFile)}
-              focusBorderColor="brand.gold"
-              position="absolute"
-              inset={0}
-              opacity={0}
-              w="100%"
-              h="100%"
-              m={0}
-              cursor="pointer"
-              />
-            </Box>
-            </FormControl>
-
-            <HStack spacing={4} align="center" flexWrap="wrap">
-            <Button
-              colorScheme="yellow"
-              bg="brand.gold"
-              color="brand.ink"
-              _hover={{ bg: "brand.goldDeep", color: "white" }}
-              onClick={onSubmit}
-              isDisabled={!canSubmit}
-              leftIcon={<ArrowForwardIcon />}
-            >
-              リクエストする
-            </Button>
+        <VStack spacing={{ base: 8, md: 12 }} align="stretch">
+          <Stack spacing={2} textAlign={{ base: "left", md: "center" }}>
+            <HStack justify={{ base: "flex-start", md: "center" }} spacing={3}>
+              <EditIcon color="brand.goldDeep" fontSize={{ base: "2xl", md: "4xl" }} />
+              <Heading fontSize={{ base: "2xl", md: "4xl" }}>AI解説生成システム</Heading>
             </HStack>
-          </VStack>
-          </GridItem>
-
-          <GridItem>
-          <VStack spacing={4} align="stretch">
-            <Heading size="sm">補足</Heading>
-            <Box>
-            <Text fontSize="sm" color="brand.muted" mb={2}>
-              現在のジョブはブラウザに保存されます。別端末からは見えません。
+            <Text color="brand.muted" fontSize={{ base: "sm", md: "md" }}>
+              過去問PDFから、AIが解答・解説PDFを作成します。
             </Text>
-            <Text fontSize="xs" color="brand.muted">
-              進行中のジョブのみ自動で更新します。
-            </Text>
-            </Box>
-          </VStack>
-          </GridItem>
-        </Grid>
-        </Box>
+          </Stack>
 
-        <Box>
-        <HStack justify="space-between" mb={4} flexWrap="wrap">
-          <Heading size="md">ジョブ一覧</Heading>
-          <Button
-          size="sm"
-          variant="outline"
-          borderColor="brand.gold"
-          color="brand.ink"
-          _hover={{ bg: "brand.gold", color: "brand.ink" }}
-          onClick={handleRefreshClick}
-          isDisabled={pendingJobs.length === 0 || isRefreshing || isRefreshCooldown}
-          isLoading={isRefreshing || isRefreshCooldown}
-          leftIcon={<RepeatIcon />}
-          >
-          更新する
-          </Button>
-        </HStack>
-        {jobs.length === 0 ? (
           <Box
-          border="1px dashed"
-          borderColor="brand.gold"
-          borderRadius="xl"
-          p={6}
-          textAlign="center"
-          color="brand.muted"
+            bg="whiteAlpha.900"
+            border="1px solid"
+            borderColor="brand.gold"
+            borderRadius="2xl"
+            boxShadow="0 20px 40px rgba(34, 21, 8, 0.08)"
+            p={{ base: 6, md: 8 }}
           >
-          まだジョブがありません。上のフォームから解答解説作成ジョブを依頼してみよう！
+            <Grid templateColumns={{ base: "1fr", lg: "1.2fr 0.8fr" }} gap={8}>
+              <GridItem>
+                <VStack spacing={6} align="stretch">
+                  <Box>
+                    <Heading size="md" mb={2}>
+                      新しいリクエスト
+                    </Heading>
+                    <Text color="brand.muted" fontSize="sm">
+                      生成AIは誤答や不足が含まれる可能性があります。最終判断は必ず担当者が行ってください。
+                    </Text>
+                  </Box>
+
+                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                    <FormControl>
+                      <FormLabel>APIキー（任意）</FormLabel>
+                      <Input
+                        value={apiKey}
+                        onChange={(event) => setApiKey(event.target.value)}
+                        placeholder="Gemini API Key"
+                        type="password"
+                        autoComplete="new-password"
+                        focusBorderColor="brand.gold"
+                      />
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel>年度</FormLabel>
+                      <Input
+                        value={year}
+                        onChange={(event) =>
+                          setYear(event.target.value.replace(/\D/g, "").slice(0, 4))
+                        }
+                        placeholder="2024"
+                        inputMode="numeric"
+                        pattern="\\d{1,4}"
+                        maxLength={4}
+                        focusBorderColor="brand.gold"
+                      />
+                      <Text fontSize="xs" color="brand.muted" mt={1}>
+                        1〜4桁の数字
+                      </Text>
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel>試験科目名</FormLabel>
+                      <Input
+                        value={subject}
+                        onChange={(event) => setSubject(event.target.value)}
+                        placeholder="生化学"
+                        maxLength={MAX_TEXT_LENGTH}
+                        focusBorderColor="brand.gold"
+                      />
+                      <Text
+                        fontSize="xs"
+                        color={subject.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
+                        mt={1}
+                      >
+                        {subject.length}/{MAX_TEXT_LENGTH}
+                      </Text>
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel>大学名</FormLabel>
+                      <Input
+                        value={university}
+                        onChange={(event) => setUniversity(event.target.value)}
+                        placeholder="東京大学"
+                        maxLength={MAX_TEXT_LENGTH}
+                        focusBorderColor="brand.gold"
+                      />
+                      <Text
+                        fontSize="xs"
+                        color={university.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
+                        mt={1}
+                      >
+                        {university.length}/{MAX_TEXT_LENGTH}
+                      </Text>
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel>試験問題作者名</FormLabel>
+                      <Input
+                        value={author}
+                        onChange={(event) => setAuthor(event.target.value)}
+                        placeholder="佐藤先生"
+                        maxLength={MAX_TEXT_LENGTH}
+                        focusBorderColor="brand.gold"
+                      />
+                      <Text
+                        fontSize="xs"
+                        color={author.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
+                        mt={1}
+                      >
+                        {author.length}/{MAX_TEXT_LENGTH}
+                      </Text>
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel>解説タイトル</FormLabel>
+                      <Input
+                        value={explanationName}
+                        onChange={(event) => {
+                          setExplanationName(event.target.value);
+                          setUserEditedName(true);
+                        }}
+                        placeholder="2024_生化学_解答解説"
+                        maxLength={MAX_TEXT_LENGTH}
+                        focusBorderColor="brand.gold"
+                      />
+                      <Text
+                        fontSize="xs"
+                        color={explanationName.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
+                        mt={1}
+                      >
+                        {explanationName.length}/{MAX_TEXT_LENGTH}
+                      </Text>
+                    </FormControl>
+                  </SimpleGrid>
+
+                  <FormControl>
+                    <FormLabel>問題ファイル（PDF）</FormLabel>
+                    <Box
+                      position="relative"
+                      border="1px dashed"
+                      borderColor="brand.gold"
+                      borderRadius="xl"
+                      bg="brand.bg"
+                      p={4}
+                      textAlign="center"
+                      cursor="pointer"
+                      _hover={{ bg: "rgba(201, 161, 74, 0.08)" }}
+                    >
+                      <VStack spacing={1} pointerEvents="none">
+                        <AttachmentIcon color="brand.goldDeep" />
+                        <Text fontSize="sm" color="brand.ink">
+                          クリックしてPDFを選択
+                        </Text>
+                        <Text fontSize="xs" color="brand.muted">
+                          {inputFile ? inputFile.name : "未選択"}
+                        </Text>
+                      </VStack>
+                      <Input
+                        type="file"
+                        accept="application/pdf"
+                        onChange={(event) => handleFileChange(event, setInputFile)}
+                        focusBorderColor="brand.gold"
+                        position="absolute"
+                        inset={0}
+                        opacity={0}
+                        w="100%"
+                        h="100%"
+                        m={0}
+                        cursor="pointer"
+                      />
+                    </Box>
+                  </FormControl>
+
+                  <HStack spacing={4} align="center" flexWrap="wrap">
+                    <Button
+                      colorScheme="yellow"
+                      bg="brand.gold"
+                      color="brand.ink"
+                      _hover={{ bg: "brand.goldDeep", color: "white" }}
+                      onClick={onSubmit}
+                      isDisabled={!canSubmit}
+                      leftIcon={<ArrowForwardIcon />}
+                    >
+                      リクエストする
+                    </Button>
+                  </HStack>
+                </VStack>
+              </GridItem>
+
+              <GridItem>
+                <VStack spacing={4} align="stretch">
+                  <Heading size="sm">補足</Heading>
+                  <Box>
+                    <Text fontSize="sm" color="brand.muted" mb={2}>
+                      現在のジョブはブラウザに保存されます。別端末からは見えません。
+                    </Text>
+                    <Text fontSize="xs" color="brand.muted">
+                      進行中のジョブのみ自動で更新します。
+                    </Text>
+                  </Box>
+                </VStack>
+              </GridItem>
+            </Grid>
           </Box>
-        ) : (
-          <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={5}>
-          {jobs.map((job) => {
-            const label = statusLabels[job.status] ?? job.status;
-            const badgeStyle = statusBadgeStyles[job.status] ?? {
-            bg: "#EFE7DA",
-            color: "#6D5F4B"
-            };
-            const etaLabel = etaLabels[job.status];
-            const createdAtMs = new Date(job.createdAt).getTime();
-            const isStalled =
-            job.status === "generating_md" &&
-            Number.isFinite(createdAtMs) &&
-            Date.now() - createdAtMs >= 30 * 60 * 1000;
-            const isDownloadable = job.status === "done";
-            const isRetryable = job.status === "failed_to_convert" || isStalled;
-            const isDownloading = downloadingJobId === job.jobId;
 
-            return (
-            <Box
-              key={job.jobId}
-              position="relative"
-              bg="white"
-              border="1px solid"
-              borderColor="brand.gold"
-              borderRadius="xl"
-              p={5}
-              boxShadow="0 12px 24px rgba(28, 18, 7, 0.08)"
-            >
-              {isDownloading ? (
-              <Box
-                position="absolute"
-                inset={0}
-                bg="rgba(247, 244, 238, 0.72)"
-                borderRadius="xl"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                flexDirection="column"
-                gap={4}
-                zIndex={1}
+          <Box>
+            <HStack justify="space-between" mb={4} flexWrap="wrap">
+              <Heading size="md">ジョブ一覧</Heading>
+              <Button
+                size="sm"
+                variant="outline"
+                borderColor="brand.gold"
+                color="brand.ink"
+                _hover={{ bg: "brand.gold", color: "brand.ink" }}
+                onClick={handleRefreshClick}
+                isDisabled={pendingJobs.length === 0 || isRefreshing || isRefreshCooldown}
+                isLoading={isRefreshing || isRefreshCooldown}
+                leftIcon={<RepeatIcon />}
               >
-                <Text fontSize="sm" color="brand.ink">
-                ダウンロード中...
-                </Text>
-                <Box
-                position="relative"
-                w="70%"
-                h="6px"
-                bg="rgba(201, 161, 74, 0.2)"
-                borderRadius="999px"
-                overflow="hidden"
-                >
-                <Box
-                  position="absolute"
-                  top={0}
-                  left={0}
-                  w="100%"
-                  h="100%"
-                  bg="brand.gold"
-                  transformOrigin="left"
-                  animation={`${loadingBar} 2.2s ease-in-out infinite`}
-                />
-                </Box>
-                <Box
-                w="22px"
-                h="22px"
-                bg="brand.goldDeep"
-                animation={`${shapeShift} 2.6s ease-in-out infinite`}
-                />
+                更新する
+              </Button>
+            </HStack>
+            {jobs.length === 0 ? (
+              <Box
+                border="1px dashed"
+                borderColor="brand.gold"
+                borderRadius="xl"
+                p={6}
+                textAlign="center"
+                color="brand.muted"
+              >
+                まだジョブがありません。上のフォームから解答解説作成ジョブを依頼してみよう！
               </Box>
-              ) : null}
+            ) : (
+              <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={5}>
+                {jobs.map((job) => {
+                  const label = statusLabels[job.status] ?? job.status;
+                  const badgeStyle = statusBadgeStyles[job.status] ?? {
+                    bg: "#EFE7DA",
+                    color: "#6D5F4B"
+                  };
+                  const etaLabel = etaLabels[job.status];
+                  const createdAtMs = new Date(job.createdAt).getTime();
+                  const isStalled =
+                    job.status === "generating_md" &&
+                    Number.isFinite(createdAtMs) &&
+                    Date.now() - createdAtMs >= 30 * 60 * 1000;
+                  const isDownloadable = job.status === "done";
+                  const isRetryable = job.status === "failed_to_convert" || isStalled;
+                  const isDownloading = downloadingJobId === job.jobId;
 
-              <VStack spacing={3} align="stretch" opacity={isDownloading ? 0.4 : 1}>
-              <HStack justify="space-between" flexWrap="wrap">
-                <Text fontWeight="600">{job.explanationName}</Text>
-                <HStack spacing={2} align="center">
-                <Badge bg={badgeStyle.bg} color={badgeStyle.color} borderRadius="full" px={3}>
-                  {label}
-                </Badge>
-                {etaLabel ? (
-                  <Text fontSize="xs" color="brand.muted">
-                  {etaLabel}
-                  </Text>
-                ) : null}
-                </HStack>
-              </HStack>
-              <Text fontSize="sm" color="brand.muted">
-                job_id: {job.jobId}
-              </Text>
-              <Text fontSize="xs" color="brand.muted">
-                作成: {formatDate(job.createdAt)} / 更新: {formatDate(job.updatedAt)}
-              </Text>
-              {job.message ? (
-                <Text fontSize="sm" color="brand.muted">
-                {job.message}
-                </Text>
-              ) : null}
-              {job.error ? (
-                <Text fontSize="sm" color="red.700">
-                {job.error}
-                </Text>
-              ) : null}
-              <HStack spacing={3} flexWrap="wrap">
-                {isDownloadable ? (
-                <Button
-                  alignSelf="flex-start"
-                  size="sm"
-                  bg="brand.gold"
-                  color="brand.ink"
-                  _hover={{ bg: "brand.goldDeep", color: "white" }}
-                  onClick={() => handleDownload(job.jobId)}
-                  leftIcon={<DownloadIcon />}
-                >
-                  ダウンロードする
-                </Button>
-                ) : null}
-                {isRetryable ? (
-                <>
-                  <Text fontSize="xs" color="brand.muted">
-                  エラーが発生したかも？
-                  </Text>
-                  <Button
-                  alignSelf="flex-start"
-                  size="sm"
-                  variant="outline"
-                  borderColor="brand.gold"
-                  color="brand.ink"
-                  _hover={{ bg: "brand.gold", color: "brand.ink" }}
-                  onClick={() => openRetryModal(job)}
-                  >
-                  もう一度試す
-                  </Button>
-                </>
-                ) : null}
-              </HStack>
-              </VStack>
-            </Box>
-            );
-          })}
-          </SimpleGrid>
-        )}
-        </Box>
+                  return (
+                    <Box
+                      key={job.jobId}
+                      position="relative"
+                      bg="white"
+                      border="1px solid"
+                      borderColor="brand.gold"
+                      borderRadius="xl"
+                      p={5}
+                      boxShadow="0 12px 24px rgba(28, 18, 7, 0.08)"
+                    >
+                      {isDownloading ? (
+                        <Box
+                          position="absolute"
+                          inset={0}
+                          bg="rgba(247, 244, 238, 0.72)"
+                          borderRadius="xl"
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          flexDirection="column"
+                          gap={4}
+                          zIndex={1}
+                        >
+                          <Text fontSize="sm" color="brand.ink">
+                            ダウンロード中...
+                          </Text>
+                          <Box
+                            position="relative"
+                            w="70%"
+                            h="6px"
+                            bg="rgba(201, 161, 74, 0.2)"
+                            borderRadius="999px"
+                            overflow="hidden"
+                          >
+                            <Box
+                              position="absolute"
+                              top={0}
+                              left={0}
+                              w="100%"
+                              h="100%"
+                              bg="brand.gold"
+                              transformOrigin="left"
+                              animation={`${loadingBar} 2.2s ease-in-out infinite`}
+                            />
+                          </Box>
+                          <Box
+                            w="22px"
+                            h="22px"
+                            bg="brand.goldDeep"
+                            animation={`${shapeShift} 2.6s ease-in-out infinite`}
+                          />
+                        </Box>
+                      ) : null}
 
-        <Box
-        bg="whiteAlpha.900"
-        border="1px solid"
-        borderColor="brand.gold"
-        borderRadius="xl"
-        p={{ base: 4, md: 5 }}
-        >
-        <HStack justify="space-between" mb={3} flexWrap="wrap">
-          <Heading size="sm">ジョブを追加</Heading>
-          <Badge bg="brand.bg" color="brand.muted" borderRadius="full" px={3}>
-          ＋ 追加
-          </Badge>
-        </HStack>
-        <Text fontSize="sm" color="brand.muted" mb={3}>
-          job_id を入力すると、ジョブ一覧に追加してステータスを確認します。
-        </Text>
-        <HStack spacing={3} flexWrap="wrap">
-          <Input
-          value={searchJobId}
-          onChange={(event) => setSearchJobId(event.target.value)}
-          placeholder="「pipeline-」から始まるJOB_ID を入力"
-          focusBorderColor="brand.gold"
-          />
-          <Button
-          size="sm"
-          bg="brand.gold"
-          color="brand.ink"
-          _hover={{ bg: "brand.goldDeep", color: "white" }}
-          onClick={handleSearchJob}
-          isDisabled={isSearching}
-          >
-          ＋ ジョブを検索して追加
-          </Button>
-        </HStack>
-        </Box>
-      </VStack>
-      </Container>
+                      <VStack spacing={3} align="stretch" opacity={isDownloading ? 0.4 : 1}>
+                        <HStack justify="space-between" flexWrap="wrap">
+                          <Text fontWeight="600">{job.explanationName}</Text>
+                          <HStack spacing={2} align="center">
+                            <Badge bg={badgeStyle.bg} color={badgeStyle.color} borderRadius="full" px={3}>
+                              {label}
+                            </Badge>
+                            {etaLabel ? (
+                              <Text fontSize="xs" color="brand.muted">
+                                {etaLabel}
+                              </Text>
+                            ) : null}
+                          </HStack>
+                        </HStack>
+                        <Text fontSize="sm" color="brand.muted">
+                          job_id: {job.jobId}
+                        </Text>
+                        <Text fontSize="xs" color="brand.muted">
+                          作成: {formatDate(job.createdAt)} / 更新: {formatDate(job.updatedAt)}
+                        </Text>
+                        {job.message ? (
+                          <Text fontSize="sm" color="brand.muted">
+                            {job.message}
+                          </Text>
+                        ) : null}
+                        {job.error ? (
+                          <Text fontSize="sm" color="red.700">
+                            {job.error}
+                          </Text>
+                        ) : null}
+                        <HStack spacing={3} flexWrap="wrap">
+                          {isDownloadable ? (
+                            <Button
+                              alignSelf="flex-start"
+                              size="sm"
+                              bg="brand.gold"
+                              color="brand.ink"
+                              _hover={{ bg: "brand.goldDeep", color: "white" }}
+                              onClick={() => handleDownload(job.jobId)}
+                              leftIcon={<DownloadIcon />}
+                            >
+                              ダウンロードする
+                            </Button>
+                          ) : null}
+                          {isRetryable ? (
+                            <>
+                              <Text fontSize="xs" color="brand.muted">
+                                エラーが発生したかも？
+                              </Text>
+                              <Button
+                                alignSelf="flex-start"
+                                size="sm"
+                                variant="outline"
+                                borderColor="brand.gold"
+                                color="brand.ink"
+                                _hover={{ bg: "brand.gold", color: "brand.ink" }}
+                                onClick={() => openRetryModal(job)}
+                              >
+                                もう一度試す
+                              </Button>
+                            </>
+                          ) : null}
+                        </HStack>
+                      </VStack>
+                    </Box>
+                  );
+                })}
+              </SimpleGrid>
+            )}
+          </Box>
 
-      <Modal isOpen={isRetryOpen} onClose={closeRetryModal} size="xl">
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>もう一度試す</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-        <VStack spacing={4} align="stretch">
-          <Text fontSize="sm" color="brand.muted">
-          前回の入力をできるだけ引き継いでいます。必要な箇所だけ修正してください。
-          </Text>
-          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-          <FormControl>
-            <FormLabel>APIキー（任意）</FormLabel>
-            <Input
-            value={retryApiKey}
-            onChange={(event) => setRetryApiKey(event.target.value)}
-            placeholder="Gemini API Key"
-            focusBorderColor="brand.gold"
-            type="password"
-            autoComplete="new-password"
-            />
-          </FormControl>
-          <FormControl>
-            <FormLabel>年度</FormLabel>
-            <Input
-            value={retryYear}
-            onChange={(event) =>
-              setRetryYear(event.target.value.replace(/\D/g, "").slice(0, 4))
-            }
-            placeholder="2024"
-            inputMode="numeric"
-            pattern="\\d{1,4}"
-            maxLength={4}
-            focusBorderColor="brand.gold"
-            />
-            <Text fontSize="xs" color="brand.muted" mt={1}>
-            1〜4桁の数字
-            </Text>
-          </FormControl>
-          <FormControl>
-            <FormLabel>試験科目名</FormLabel>
-            <Input
-            value={retrySubject}
-            onChange={(event) => setRetrySubject(event.target.value)}
-            placeholder="生化学"
-            maxLength={MAX_TEXT_LENGTH}
-            focusBorderColor="brand.gold"
-            />
-            <Text
-            fontSize="xs"
-            color={retrySubject.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
-            mt={1}
-            >
-            {retrySubject.length}/{MAX_TEXT_LENGTH}
-            </Text>
-          </FormControl>
-          <FormControl>
-            <FormLabel>大学名</FormLabel>
-            <Input
-            value={retryUniversity}
-            onChange={(event) => setRetryUniversity(event.target.value)}
-            placeholder="東京大学"
-            maxLength={MAX_TEXT_LENGTH}
-            focusBorderColor="brand.gold"
-            />
-            <Text
-            fontSize="xs"
-            color={retryUniversity.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
-            mt={1}
-            >
-            {retryUniversity.length}/{MAX_TEXT_LENGTH}
-            </Text>
-          </FormControl>
-          <FormControl>
-            <FormLabel>試験問題作者名</FormLabel>
-            <Input
-            value={retryAuthor}
-            onChange={(event) => setRetryAuthor(event.target.value)}
-            placeholder="佐藤先生"
-            maxLength={MAX_TEXT_LENGTH}
-            focusBorderColor="brand.gold"
-            />
-            <Text
-            fontSize="xs"
-            color={retryAuthor.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
-            mt={1}
-            >
-            {retryAuthor.length}/{MAX_TEXT_LENGTH}
-            </Text>
-          </FormControl>
-          <FormControl>
-            <FormLabel>解説タイトル</FormLabel>
-            <Input
-            value={retryExplanationName}
-            onChange={(event) => {
-              setRetryExplanationName(event.target.value);
-              setRetryUserEditedName(true);
-            }}
-            placeholder="2024_生化学_解答解説"
-            maxLength={MAX_TEXT_LENGTH}
-            focusBorderColor="brand.gold"
-            />
-            <Text
-            fontSize="xs"
-            color={
-              retryExplanationName.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"
-            }
-            mt={1}
-            >
-            {retryExplanationName.length}/{MAX_TEXT_LENGTH}
-            </Text>
-          </FormControl>
-          </SimpleGrid>
-          <FormControl>
-          <FormLabel>問題ファイル（PDF）</FormLabel>
           <Box
-            position="relative"
-            border="1px dashed"
+            bg="whiteAlpha.900"
+            border="1px solid"
             borderColor="brand.gold"
             borderRadius="xl"
-            bg="brand.bg"
-            p={4}
-            textAlign="center"
-            cursor="pointer"
-            _hover={{ bg: "rgba(201, 161, 74, 0.08)" }}
+            p={{ base: 4, md: 5 }}
           >
-            <VStack spacing={1} pointerEvents="none">
-            <AttachmentIcon color="brand.goldDeep" />
-            <Text fontSize="sm" color="brand.ink">
-              クリックしてPDFを選択
+            <HStack justify="space-between" mb={3} flexWrap="wrap">
+              <Heading size="sm">ジョブを追加</Heading>
+              <Badge bg="brand.bg" color="brand.muted" borderRadius="full" px={3}>
+                ＋ 追加
+              </Badge>
+            </HStack>
+            <Text fontSize="sm" color="brand.muted" mb={3}>
+              job_id を入力すると、ジョブ一覧に追加してステータスを確認します。
             </Text>
-            <Text fontSize="xs" color="brand.muted">
-              {retryFile ? retryFile.name : "未選択"}
-            </Text>
-            </VStack>
-            <Input
-            type="file"
-            accept="application/pdf"
-            onChange={(event) => handleFileChange(event, setRetryFile)}
-            focusBorderColor="brand.gold"
-            position="absolute"
-            inset={0}
-            opacity={0}
-            w="100%"
-            h="100%"
-            m={0}
-            cursor="pointer"
-            />
+            <HStack spacing={3} flexWrap="wrap">
+              <Input
+                value={searchJobId}
+                onChange={(event) => setSearchJobId(event.target.value)}
+                placeholder="「pipeline-」から始まるJOB_ID を入力"
+                focusBorderColor="brand.gold"
+              />
+              <Button
+                size="sm"
+                bg="brand.gold"
+                color="brand.ink"
+                _hover={{ bg: "brand.goldDeep", color: "white" }}
+                onClick={handleSearchJob}
+                isDisabled={isSearching}
+              >
+                ＋ ジョブを検索して追加
+              </Button>
+            </HStack>
           </Box>
-          </FormControl>
-          {retryJob ? (
-          <Text fontSize="xs" color="brand.muted">
-            対象ジョブ: {retryJob.jobId}
-          </Text>
-          ) : null}
         </VStack>
-        </ModalBody>
-        <ModalFooter>
-        <HStack spacing={3}>
-          <Button variant="ghost" onClick={closeRetryModal}>
-          閉じる
-          </Button>
-          <Button
-          bg="brand.gold"
-          color="brand.ink"
-          _hover={{ bg: "brand.goldDeep", color: "white" }}
-          onClick={onRetrySubmit}
-          isDisabled={!retryCanSubmit}
-          >
-          もう一度試す
-          </Button>
-        </HStack>
-        </ModalFooter>
-      </ModalContent>
+      </Container>
+
+      <Box as="footer" mt={{ base: 10, md: 14 }} pb={{ base: 6, md: 10 }}>
+        <Container maxW="6xl" ml={4}>
+          <VStack spacing={4} justify="center" align="center">
+            <Text fontSize="sm" color="brand.muted">
+              © 2026 Medteria igatatsu｜ All rights reserved.
+            </Text>
+          </VStack>
+        </Container>
+      </Box>
+
+      <Modal isOpen={isRetryOpen} onClose={closeRetryModal} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>もう一度試す</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4} align="stretch">
+              <Text fontSize="sm" color="brand.muted">
+                前回の入力をできるだけ引き継いでいます。必要な箇所だけ修正してください。
+              </Text>
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                <FormControl>
+                  <FormLabel>APIキー（任意）</FormLabel>
+                  <Input
+                    value={retryApiKey}
+                    onChange={(event) => setRetryApiKey(event.target.value)}
+                    placeholder="Gemini API Key"
+                    focusBorderColor="brand.gold"
+                    type="password"
+                    autoComplete="new-password"
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>年度</FormLabel>
+                  <Input
+                    value={retryYear}
+                    onChange={(event) =>
+                      setRetryYear(event.target.value.replace(/\D/g, "").slice(0, 4))
+                    }
+                    placeholder="2024"
+                    inputMode="numeric"
+                    pattern="\\d{1,4}"
+                    maxLength={4}
+                    focusBorderColor="brand.gold"
+                  />
+                  <Text fontSize="xs" color="brand.muted" mt={1}>
+                    1〜4桁の数字
+                  </Text>
+                </FormControl>
+                <FormControl>
+                  <FormLabel>試験科目名</FormLabel>
+                  <Input
+                    value={retrySubject}
+                    onChange={(event) => setRetrySubject(event.target.value)}
+                    placeholder="生化学"
+                    maxLength={MAX_TEXT_LENGTH}
+                    focusBorderColor="brand.gold"
+                  />
+                  <Text
+                    fontSize="xs"
+                    color={retrySubject.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
+                    mt={1}
+                  >
+                    {retrySubject.length}/{MAX_TEXT_LENGTH}
+                  </Text>
+                </FormControl>
+                <FormControl>
+                  <FormLabel>大学名</FormLabel>
+                  <Input
+                    value={retryUniversity}
+                    onChange={(event) => setRetryUniversity(event.target.value)}
+                    placeholder="東京大学"
+                    maxLength={MAX_TEXT_LENGTH}
+                    focusBorderColor="brand.gold"
+                  />
+                  <Text
+                    fontSize="xs"
+                    color={retryUniversity.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
+                    mt={1}
+                  >
+                    {retryUniversity.length}/{MAX_TEXT_LENGTH}
+                  </Text>
+                </FormControl>
+                <FormControl>
+                  <FormLabel>試験問題作者名</FormLabel>
+                  <Input
+                    value={retryAuthor}
+                    onChange={(event) => setRetryAuthor(event.target.value)}
+                    placeholder="佐藤先生"
+                    maxLength={MAX_TEXT_LENGTH}
+                    focusBorderColor="brand.gold"
+                  />
+                  <Text
+                    fontSize="xs"
+                    color={retryAuthor.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"}
+                    mt={1}
+                  >
+                    {retryAuthor.length}/{MAX_TEXT_LENGTH}
+                  </Text>
+                </FormControl>
+                <FormControl>
+                  <FormLabel>解説タイトル</FormLabel>
+                  <Input
+                    value={retryExplanationName}
+                    onChange={(event) => {
+                      setRetryExplanationName(event.target.value);
+                      setRetryUserEditedName(true);
+                    }}
+                    placeholder="2024_生化学_解答解説"
+                    maxLength={MAX_TEXT_LENGTH}
+                    focusBorderColor="brand.gold"
+                  />
+                  <Text
+                    fontSize="xs"
+                    color={
+                      retryExplanationName.length >= MAX_TEXT_LENGTH ? "red.600" : "brand.muted"
+                    }
+                    mt={1}
+                  >
+                    {retryExplanationName.length}/{MAX_TEXT_LENGTH}
+                  </Text>
+                </FormControl>
+              </SimpleGrid>
+              <FormControl>
+                <FormLabel>問題ファイル（PDF）</FormLabel>
+                <Box
+                  position="relative"
+                  border="1px dashed"
+                  borderColor="brand.gold"
+                  borderRadius="xl"
+                  bg="brand.bg"
+                  p={4}
+                  textAlign="center"
+                  cursor="pointer"
+                  _hover={{ bg: "rgba(201, 161, 74, 0.08)" }}
+                >
+                  <VStack spacing={1} pointerEvents="none">
+                    <AttachmentIcon color="brand.goldDeep" />
+                    <Text fontSize="sm" color="brand.ink">
+                      クリックしてPDFを選択
+                    </Text>
+                    <Text fontSize="xs" color="brand.muted">
+                      {retryFile ? retryFile.name : "未選択"}
+                    </Text>
+                  </VStack>
+                  <Input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(event) => handleFileChange(event, setRetryFile)}
+                    focusBorderColor="brand.gold"
+                    position="absolute"
+                    inset={0}
+                    opacity={0}
+                    w="100%"
+                    h="100%"
+                    m={0}
+                    cursor="pointer"
+                  />
+                </Box>
+              </FormControl>
+              {retryJob ? (
+                <Text fontSize="xs" color="brand.muted">
+                  対象ジョブ: {retryJob.jobId}
+                </Text>
+              ) : null}
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <HStack spacing={3}>
+              <Button variant="ghost" onClick={closeRetryModal}>
+                閉じる
+              </Button>
+              <Button
+                bg="brand.gold"
+                color="brand.ink"
+                _hover={{ bg: "brand.goldDeep", color: "white" }}
+                onClick={onRetrySubmit}
+                isDisabled={!retryCanSubmit}
+              >
+                もう一度試す
+              </Button>
+            </HStack>
+          </ModalFooter>
+        </ModalContent>
       </Modal>
 
       <Modal isOpen={isNoticeOpen} onClose={closeNoticeModal} size="lg">
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>リクエスト受付後のご案内</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-        <VStack spacing={4} align="stretch">
-          <Box display="flex" justifyContent="center">
-          <Box
-            w="56px"
-            h="56px"
-            borderRadius="full"
-            bg="brand.bg"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            animation={`${noticeCheck} 0.8s ease-out`}
-          >
-            <CheckIcon w="30px" h="30px" color="brand.goldDeep" />
-          </Box>
-          </Box>
-          <Text fontSize="sm" color="brand.muted">
-          最大15〜20分程度の待ち時間が発生する場合があります。
-          </Text>
-          <Text fontSize="sm" color="brand.muted">
-          リクエスト情報は端末ブラウザ内に保存されるため、待ち時間中は自由に退出してかまいません。
-          </Text>
-          <Text fontSize="sm" color="brand.muted">
-          必要であれば job_id を控えておくと、後で検索できます。
-          </Text>
-          {noticeJobId ? (
-          <HStack spacing={3} flexWrap="wrap">
-            <Badge bg="brand.bg" color="brand.muted" borderRadius="full" px={3}>
-            job_id
-            </Badge>
-            <Text fontSize="sm" color="brand.ink">
-            {noticeJobId}
-            </Text>
-            <Button
-            size="xs"
-            variant="outline"
-            borderColor="brand.gold"
-            color="brand.ink"
-            _hover={{ bg: "brand.gold", color: "brand.ink" }}
-            onClick={handleCopyJobId}
-            leftIcon={<CopyIcon />}
-            >
-            コピー
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>リクエスト受付後のご案内</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4} align="stretch">
+              <Box display="flex" justifyContent="center">
+                <Box
+                  w="56px"
+                  h="56px"
+                  borderRadius="full"
+                  bg="brand.bg"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  animation={`${noticeCheck} 0.8s ease-out`}
+                >
+                  <CheckIcon w="30px" h="30px" color="brand.goldDeep" />
+                </Box>
+              </Box>
+              <Text fontSize="sm" color="brand.muted">
+                最大15〜20分程度の待ち時間が発生する場合があります。
+              </Text>
+              <Text fontSize="sm" color="brand.muted">
+                リクエスト情報は端末ブラウザ内に保存されるため、待ち時間中は自由に退出してかまいません。
+              </Text>
+              <Text fontSize="sm" color="brand.muted">
+                必要であれば job_id を控えておくと、後で検索できます。
+              </Text>
+              {noticeJobId ? (
+                <HStack spacing={3} flexWrap="wrap">
+                  <Badge bg="brand.bg" color="brand.muted" borderRadius="full" px={3}>
+                    job_id
+                  </Badge>
+                  <Text fontSize="sm" color="brand.ink">
+                    {noticeJobId}
+                  </Text>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    borderColor="brand.gold"
+                    color="brand.ink"
+                    _hover={{ bg: "brand.gold", color: "brand.ink" }}
+                    onClick={handleCopyJobId}
+                    leftIcon={<CopyIcon />}
+                  >
+                    コピー
+                  </Button>
+                </HStack>
+              ) : null}
+              <Text fontSize="sm" color="brand.muted">
+                サイズが大きい場合や混雑時には、生成に失敗する可能性があります。
+              </Text>
+              <Text fontSize="sm" color="brand.muted">
+                節度を守った利用をお願いします。
+              </Text>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" onClick={closeNoticeModal}>
+              閉じる
             </Button>
-          </HStack>
-          ) : null}
-          <Text fontSize="sm" color="brand.muted">
-          サイズが大きい場合や混雑時には、生成に失敗する可能性があります。
-          </Text>
-          <Text fontSize="sm" color="brand.muted">
-          節度を守った利用をお願いします。
-          </Text>
-        </VStack>
-        </ModalBody>
-        <ModalFooter>
-        <Button variant="ghost" onClick={closeNoticeModal}>
-          閉じる
-        </Button>
-        </ModalFooter>
-      </ModalContent>
+          </ModalFooter>
+        </ModalContent>
       </Modal>
     </Box>
   );
