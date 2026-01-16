@@ -11,7 +11,7 @@ from google.genai import types # type: ignore
 
 
 HTTP_TIMEOUT_MS = 15 * 60 * 1000
-MAX_RETRIES = 3
+MAX_RETRIES = 2
 MODEL_NAME = os.getenv("GEMINI_LEGACY_MODEL", "gemini-3-pro-preview")
 REST_API_VERSION = os.getenv("GEMINI_LEGACY_API_VERSION", "v1alpha")
 
@@ -72,7 +72,6 @@ def generate_markdown_from_input(
                     mime_type="application/pdf",
                     data=pdf_bytes,
                 ),
-                # media_resolution={"level": "media_resolution_high"},
             ),
             types.Part(text=prompt),
         ],
@@ -139,7 +138,7 @@ def _build_prompt(
         "添付ファイルは医科大学の過去問問題ファイルです。以下の条件を満たすように、すべての問題に対する解答と解説をMarkdown形式で作成してください。"
         f"「{title}の解答解説」から出力し始めてください。問題ごとに問題番号と問題文を省略せずそのまま引用し、引用であることをはっきりさせるためにquoteをつけてください。"
         "ただし問題文に図が含まれる場合、図の部分は引用しなくて構いません。解説は医学生向けに、冗長を最大限許容して丁寧に網羅的に作成してください。"
-        "問題文が英語の場合は、解説に問題文の日本語訳についても出力してください。\n\n"
+        "問題文が英語の場合は、解説に問題文の日本語訳についても出力してください。"
     )
 
 
@@ -152,7 +151,12 @@ def _generate_with_retry(client: genai.Client, contents: types.Content) -> str:
                 model=MODEL_NAME,
                 contents=contents,
                 config=types.GenerateContentConfig(
-                    http_options=types.HttpOptions(timeout=HTTP_TIMEOUT_MS)
+                    http_options=types.HttpOptions(timeout=HTTP_TIMEOUT_MS),
+                    automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                        disable=False,
+                        maximum_remote_calls=30,
+                        ignore_call_history=False,
+                    ),
                 ),
             )
             response_text = _extract_text(response)
@@ -166,7 +170,7 @@ def _generate_with_retry(client: genai.Client, contents: types.Content) -> str:
             time.sleep(delay)
     if not response_text:
         if last_error:
-            raise RuntimeError("Gemini request failed after retries.") from last_error
+            raise RuntimeError(f"Gemini request failed after retries. from last_error: {last_error}") from last_error
         raise RuntimeError("Gemini response is empty.")
     return response_text
 
