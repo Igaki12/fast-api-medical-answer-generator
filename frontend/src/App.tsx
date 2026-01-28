@@ -210,6 +210,11 @@ export default function App() {
   const [isSearching, setIsSearching] = useState(false);
   const pollingRef = useRef<number | null>(null);
   const refreshCooldownRef = useRef<number | null>(null);
+  const bannerPrefix = "作った解答解説を";
+  const bannerBrand = "Medteria";
+  const bannerSuffix = "でシェアしよう！";
+  const bannerLineGap = 0.75;
+  const bannerCharGap = 0.06;
 
   useEffect(() => {
     saveJobs(jobs);
@@ -632,6 +637,33 @@ export default function App() {
     0% { opacity: 0; transform: scale(0.8); }
     60% { opacity: 1; transform: scale(1.08); }
     100% { opacity: 1; transform: scale(1); }
+  `;
+
+  const bannerHop = keyframes`
+    0% {
+      transform: translateY(0) scale(1);
+      filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+    }
+    12% {
+      transform: translateY(-6px) scale(1.06) rotate(-1.3deg);
+      filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.18));
+    }
+    24% {
+      transform: translateY(0) scale(1);
+      filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+    }
+    40% {
+      transform: translateY(-3px) scale(1.02) rotate(1.1deg);
+      filter: drop-shadow(0 6px 10px rgba(2, 2, 2, 0.12));
+    }
+    58% {
+      transform: translateY(0) scale(1);
+      filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+    }
+    100% {
+      transform: translateY(0) scale(1);
+      filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+    }
   `;
 
   return (
@@ -1172,17 +1204,100 @@ export default function App() {
               </Button>
             </HStack>
           </Box>
+
+            {jobs.length > 0 && (
+            <Box
+              mt={28}
+              p={{ base: 4, md: 5 }}
+              border="1px dashed"
+              borderColor="brand.gold"
+              borderRadius="xl"
+              width="100%"
+              mx="auto"
+              overflow="visible"
+            >
+              <Stack
+              direction={{ base: "column", md: "row" }}
+              spacing={{ base: 0, md: 2 }}
+              align="center"
+              justify="center"
+              alignItems={{ base: "center", md: "flex-end" }}
+              >
+              <Text
+                fontSize={{ base: "xl", md: "2xl" }}
+                fontWeight="semibold"
+                color="brand.ink"
+                textAlign="center"
+                lineHeight="1"
+                overflow="visible"
+              >
+                {Array.from(bannerPrefix).map((char, index) => (
+                <Text
+                  key={`prefix-${index}-${char}`}
+                  as="span"
+                  display="inline-block"
+                  animation={`${bannerHop} 8.6s cubic-bezier(0.22, 1, 0.36, 1) ${index * bannerCharGap
+                  }s infinite`}
+                  willChange="transform, filter"
+                >
+                  {char}
+                </Text>
+                ))}
+              </Text>
+              <Text
+                fontSize={{ base: "3xl", md: "4xl" }}
+                fontWeight="bold"
+                textAlign="center"
+                lineHeight="0.95"
+                overflow="visible"
+                display="inline-block"
+                bgGradient="linear(to-r, #F59E0B, #F97316, #EF4444)"
+                bgClip="text"
+                animation={`${bannerHop} 8.6s cubic-bezier(0.22, 1, 0.36, 1) ${bannerLineGap + bannerPrefix.length * bannerCharGap
+                }s infinite`}
+                willChange="transform, filter"
+              >
+                {bannerBrand}
+              </Text>
+              <Text
+                fontSize={{ base: "xl", md: "2xl" }}
+                fontWeight="semibold"
+                color="brand.ink"
+                textAlign="center"
+                lineHeight="1"
+                overflow="visible"
+              >
+                {Array.from(bannerSuffix).map((char, index) => (
+                <Text
+                  key={`suffix-${index}-${char}`}
+                  as="span"
+                  display="inline-block"
+                  animation={`${bannerHop} 8.6s cubic-bezier(0.22, 1, 0.36, 1) ${bannerLineGap * 2 + index * bannerCharGap
+                  }s infinite`}
+                  willChange="transform, filter"
+                >
+                  {char}
+                </Text>
+                ))}
+              </Text>
+              </Stack>
+            </Box>
+            )}
+
+
+
+
         </VStack>
       </Container>
 
-      <Box as="footer" mt={{ base: 10, md: 14 }} pb={{ base: 6, md: 10 }}>
-        <Container maxW="6xl" ml={4}>
-          <VStack spacing={4} justify="center" align="center">
-            <Text fontSize="sm" color="brand.muted">
-              © 2026 Medteria igatatsu｜ All rights reserved.
-            </Text>
-          </VStack>
-        </Container>
+
+
+      <Box as="footer" mt={{ base: 2, md: 4 }} pb={{ base: 6, md: 10 }}>
+        <VStack spacing={4} justify="center" align="center">
+          <Text fontSize="sm" color="brand.muted">
+            © 2026 Medteria igatatsu ｜ All rights reserved.
+          </Text>
+        </VStack>
       </Box>
 
       <Modal isOpen={isRetryOpen} onClose={closeRetryModal} size="xl">
